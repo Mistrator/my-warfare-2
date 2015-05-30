@@ -1,0 +1,24 @@
+3:
+Pilvet / savu
+
+2:
+Taskulamppu
+
+1:
+Helikopteri
+Tähtäimet
+
+0:
+Kuuset
+Naamioverkko
+
+-1:
+Seinät
+
+-2:
+Pelaajat
+Zombit
+
+-3:
+Veri
+Hylsyt

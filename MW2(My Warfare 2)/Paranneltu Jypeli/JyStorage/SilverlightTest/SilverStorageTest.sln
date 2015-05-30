@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverStorageTest", "SilverStorageTest.csproj", "{979DEFD5-2B25-41B3-8CE4-E78277790669}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverStorage", "..\..\WP7\SilverStorage\SilverStorage.csproj", "{DD8C26BE-5BD6-4C8A-B4AF-5A66C545B9A0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{979DEFD5-2B25-41B3-8CE4-E78277790669}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{979DEFD5-2B25-41B3-8CE4-E78277790669}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{979DEFD5-2B25-41B3-8CE4-E78277790669}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{979DEFD5-2B25-41B3-8CE4-E78277790669}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{979DEFD5-2B25-41B3-8CE4-E78277790669}.Release|Any CPU.Build.0 = Release|Any CPU
+		{979DEFD5-2B25-41B3-8CE4-E78277790669}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{DD8C26BE-5BD6-4C8A-B4AF-5A66C545B9A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD8C26BE-5BD6-4C8A-B4AF-5A66C545B9A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD8C26BE-5BD6-4C8A-B4AF-5A66C545B9A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD8C26BE-5BD6-4C8A-B4AF-5A66C545B9A0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
