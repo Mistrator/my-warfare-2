@@ -36,6 +36,8 @@ public abstract class Vakiot
     public const double PELAAJAN_PIENIN_SALLITTU_Y_KENTALLA = -PELAAJAN_SUURIN_SALLITTU_Y_KENTALLA;
     public const int TULEN_LEVIAMIS_ETAISYYS = 100; // 100
     public const double TULEN_DAMAGE_ELAVIA_VASTAAN = 0.4;
+    public const string PIIKKILANKA_TAG = "piikkilanka"; // pelaajille kiinteä, zombit menevät läpi
+    public const double SHATTER_SIZE = 10;
 
     #endregion
 
@@ -43,9 +45,16 @@ public abstract class Vakiot
 
     public const double SPAWNAUS_VAUHTI = 4.0; // 4.0
     public const int RESPAUSTEN_OLETUSMAARA = 5;
-    public const int VIHOLLISTEN_OLETUS_MAX_MAARA_SPAWNAUSKIERROSTA_KOHTI = 3;
+    public const int VIHOLLISTEN_OLETUS_MAX_MAARA_SPAWNAUSKIERROSTA_KOHTI = 3; // 3
     public const double PALJONKO_VIHOLLISET_SPAWNAAVAT_KENTAN_RAJOJEN_ULKOPUOLELLE = 100.0;
-    public const int VIHOLLISTEN_MAX_MAARA_PELISSA = 30; // 20
+    public const int VIHOLLISTEN_MAX_MAARA_PELISSA = 30; // 30
+
+    public const double AI_REFRESH_RATE = 1.0;
+    public const double DISTANCE_TO_REFRESH_ROUTE = 750.0; // jos pelaaja tätä kauempana dijkstra-reitin päästä, lasketaan uusi reitti
+
+    // miten jaksotetaan jonossa olevat reitinhakupyynnöt
+    public const double DIJKSTRA_PATHFINDING_REFRESH_RATE = 1 / 3.0;
+    public const int AI_PATHFINDING_UPDATES_PER_TICK = 4;
 
     #endregion
 

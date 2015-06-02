@@ -24,11 +24,18 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     #region attribuutit, kuvat ja äänet
     #region peliattribuutit
 
+#if DEBUG
+    // reitinhakutestaus, voi poistaa
+    public int searchCount = 0;
+    Vector pos1;
+    Vector pos2;
+#endif
+
     public static MW2_My_Warfare_2_ Peli { get; private set; }
     public Pelaaja[] pelaajat = new Pelaaja[Vakiot.PELAAJIEN_MAARA];
     private List<GameObject> tehosteet = new List<GameObject>();
     public Queue<Tuhoutuva> sirpaleet = new Queue<Tuhoutuva>();
-    private Kentta KentanOsat { get; set; }
+    public Kentta KentanOsat { get; set; }
     private String ValittuKenttaTiedosto { get; set; }
     private Timer AikaKentanAlusta = new Timer();
     private Timer FireUpdateTick = new Timer();
@@ -548,6 +555,25 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         }
     }
 
+#if DEBUG
+    void DrawRoute()
+    {
+        List<Vector> reitti = KentanOsat.GetRouteCoordinates(
+            KentanOsat.DijkstraSearch(
+            KentanOsat.GetCorrespondingNode(pos1),
+            KentanOsat.GetCorrespondingNode(pos2)));
+
+        for (int i = 0; i < reitti.Count; i++)
+        {
+            GameObject marker = new GameObject(10, 10);
+            marker.Color = Color.Red;
+            marker.Position = reitti[i];
+            marker.MaximumLifetime = TimeSpan.FromSeconds(10.0);
+            Add(marker);
+        }
+    }
+#endif
+
     #endregion
 
     #region kenttä
@@ -585,11 +611,11 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 ColorTileMap ruudut = ColorTileMap.FromLevelAsset(ValittuKenttaTiedosto);
                 KentanOsat = new Kentta(ruudut.ColumnCount, ruudut.RowCount, "valekivi");
 
-                ruudut.SetTileMethod(Color.Black, LuoKentanOsa, piikkilankaKuva, "piikkilanka", 5);
+                ruudut.SetTileMethod(Color.Black, LuoKentanOsa, piikkilankaKuva, Vakiot.PIIKKILANKA_TAG, 5);
                 ruudut.SetTileMethod(Color.Gray, LuoTuhoutuvaKentanOsa, kivenKuva, "kivi", 20, 1.0, 1.0);
                 ruudut.SetTileMethod(Color.DarkRed, LuoLapiMentavaKentanOsa, kivenKuva, "valekivi", 1.0, 1.0, 1, false);
                 ruudut.SetTileMethod(Color.Orange, LuoTuhoutuvaKentanOsa, pystypuunKuva, "puu", 10, 0.3, 1.0);
-                ruudut.SetTileMethod(Color.Red, LuoKentanOsa, pystypiikkilankaKuva, "piikkilanka", 5);
+                ruudut.SetTileMethod(Color.Red, LuoKentanOsa, pystypiikkilankaKuva, Vakiot.PIIKKILANKA_TAG, 5);
                 ruudut.SetTileMethod(Color.Brown, LuoTuhoutuvaKentanOsa, vaakapuunKuva, "puu", 10, 1.0, 0.3);
                 //ruudut.SetTileMethod(Color.ForestGreen, LuoLapiMentavaKentanOsa, naamioverkonKuva, "naamioverkko", 1);
                 ruudut.SetTileMethod(Color.Purple, LuoLaatikko);
@@ -623,7 +649,6 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 ruudut.SetTileMethod(Color.ForestGreen, LuoLapiMentavaKentanOsa, kuusi, "kuusi", 4.0, 4.0, 1, true);
                 ruudut.SetTileMethod(Color.DarkViolet, delegate(Vector p, double w, double h, IntPoint posInLevel) { Blood.AddNormalBlood(p, 5, 1.5); });
 
-                //ruudut.Optimize(Color.Gray);
                 ruudut.Execute(50, 50);
                 LuoPilvet((onkoInfinite && pelaajienMaara == 1));
 
@@ -646,6 +671,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 break;
             case 3:
                 onkoInfinite = true;
+                KentanOsat = new Kentta(Vakiot.KENTAN_LEVEYS, Vakiot.KENTAN_KORKEUS, "valekivi");
                 break;
         }
 
@@ -657,7 +683,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
 
         if (CurrentGameMode == Gamemode.InfiniteSingle)
             kaytetaankoTaskuLamppua = true;
-        if (CurrentGameMode == Gamemode.SurvivalSingle && CurrentGameMode == Gamemode.SurvivalMulti)
+        if (CurrentGameMode == Gamemode.SurvivalSingle || CurrentGameMode == Gamemode.SurvivalMulti)
         {
             for (int i = 0; i < 10; i++)
             {
@@ -1167,6 +1193,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         tynnyri.LinearDamping = 0.90;
         tynnyri.AngularDamping = 0.90;
         tynnyri.Angle = RandomGen.NextAngle();
+        tynnyri.Shatters = false;
         tynnyri.Extinguished += delegate
         {
             Partikkelit.AddExplosionEffect(tynnyri.Position, 600);
@@ -1188,6 +1215,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
 
         tynnyri.Kesto.LowerLimit += delegate
         {
+            if (tynnyri.IsDestroying || tynnyri.IsDestroyed) return;
             Partikkelit.AddExplosionEffect(tynnyri.Position, 600);
             //Flame f = Partikkelit.CreateFlames(tynnyri.Position, 30);
             //Add(f);
@@ -1242,6 +1270,9 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         laatikko.Tag = "laatikko";
         AddCollisionHandler(laatikko, AnnaKamaa);
         Add(laatikko);
+
+        if (KentanOsat != null)
+            KentanOsat.LisaaSeina(posInLevel.X, posInLevel.Y, laatikko);
     }
 
     void LuoKillBall(Vector paikka)
@@ -2102,11 +2133,10 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         Vihollinen zombi = new Vihollinen(normaaliZombiKuva.Width / 1.2, normaaliZombiKuva.Height / 1.2, normaaliZombiKuva, 20, 12, 100, pelaajat, false, false, this, peli); // nopeus oli 100
         //zombi.Animation = new Animation(normaaliZombiAnimaatio);
         //zombi.Animation.FPS = 2;
-        zombi.ReittiAivot.Path = AsetaZombienReitti();
         peli.LisaaVihollinenPeliin(zombi);
 
         // Zombi, jolla on ase
-        /*Vihollinen ampuvaZombi = new Vihollinen(ampuvaZombiKuva.Width / 1.2, ampuvaZombiKuva.Height / 1.2, ampuvaZombiKuva, 20, 4, 100, pelaajat, true, false, this, peli);
+        /* Vihollinen ampuvaZombi = new Vihollinen(ampuvaZombiKuva.Width / 1.2, ampuvaZombiKuva.Height / 1.2, ampuvaZombiKuva, 20, 4, 100, pelaajat, true, false, this, peli);
         ampuvaZombi.AmpumisTarkkuus = 6.0;
         ampuvaZombi.EtaisyysJoltaAmpuu = 300.0;
         ampuvaZombi.ValittuAse = Aseet.LuoRynkky();
@@ -2186,32 +2216,6 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         peli.VihollistenFixedSpawnit.Add(new Vector(-1300, 920));
     }
 
-    List<Vector> AsetaZombienReitti()
-    {
-        List<Vector> reitti = new List<Vector>();
-
-        #region reitti
-
-        reitti.Add(new Vector(7.00005395661715, -425));
-        reitti.Add(new Vector(-3.67825060311444, 320.912795859944));
-        reitti.Add(new Vector(540.23068907145, 313.530017619634));
-        reitti.Add(new Vector(525.992669335417, -401.016517890329));
-        reitti.Add(new Vector(-523.785612892601, -401.016592493206));
-        reitti.Add(new Vector(-523.78528379717, -798.969653484225));
-        reitti.Add(new Vector(5.93922418268108, -774.676025736885));
-        reitti.Add(new Vector(-5.59083269603437, 305.856640112233));
-        reitti.Add(new Vector(-561.83111320915, 330.513156279951));
-        reitti.Add(new Vector(-485.64547802245, -393.000292745973));
-        reitti.Add(new Vector(486.109136843343, -393.000052853701));
-        reitti.Add(new Vector(482.080721702118, -779.19009672133));
-        reitti.Add(new Vector(7.4500585429708, -777.291912255219));
-        reitti.Add(new Vector(6.08197169872759, -407.783422511761));
-
-        #endregion
-
-        return reitti;
-    }
-
     /// <summary>
     /// Päivitetään vihollisen aivojen kohde.
     /// </summary>
@@ -2256,9 +2260,9 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         if (pelaaja.SeinienMaara <= 0) return;
 
         if (pelaaja.Numero == 1)
-            LuoTuhoutuvaKentanOsa(SijoitaKentanosaRuudukkoon(pelaajat[0].tahtain.Position), 50, 50, new IntPoint(0, 0), kivenKuva, "kivi", 20, 1.0, 1.0);
+            LuoTuhoutuvaKentanOsa(SijoitaKentanosaRuudukkoon(pelaajat[0].tahtain.Position), 50, 50, KentanOsat.GetCorrespondingNode(pelaajat[0].tahtain.Position), kivenKuva, "kivi", 20, 1.0, 1.0);
         if (pelaaja.Numero == 2)
-            ControllerOne.Listen(Button.B, ButtonState.Pressed, delegate { LuoTuhoutuvaKentanOsa(SijoitaKentanosaRuudukkoon(pelaajat[1].tahtain.Position), 50, 50, new IntPoint(0, 0), kivenKuva, "kivi", 20, 1.0, 1.0); }, null);
+            ControllerOne.Listen(Button.B, ButtonState.Pressed, delegate { LuoTuhoutuvaKentanOsa(SijoitaKentanosaRuudukkoon(pelaajat[1].tahtain.Position), 50, 50, KentanOsat.GetCorrespondingNode(pelaajat[1].tahtain.Position), kivenKuva, "kivi", 20, 1.0, 1.0); }, null);
         pelaaja.SeinienMaara--;
     }
 
@@ -2428,10 +2432,6 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         if (kaytetaankoLaseria)
         {
             pelaaja.kaytetaankoPalloTahtainta = false;
-            //pelaaja.tahtain.IsVisible = false;
-            //AxleJoint aj = new AxleJoint(pelaaja.tahtain, pelaaja);
-            //aj.Softness = 2;
-            //Add(aj);
         }
         return pelaaja;
     }
@@ -2441,9 +2441,24 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// </summary>
     /// <param name="pelaaja">Pelaaja, jota liikutetaan.</param>
     /// <param name="suunta">Suunta, johon pelaajaa liikutetaan.</param>
-    void LiikutaPelaajaa(Pelaaja pelaaja, Vector suunta)
+    void LiikutaPelaajaa(Pelaaja pelaaja)
     {
-        pelaaja.Move(suunta * pelaaja.Nopeus);
+        Vector w = new Vector(0.0, 1.0);
+        Vector s = new Vector(0.0, -1.0);
+        Vector a = new Vector(-1.0, 0.0);
+        Vector d = new Vector(1.0, 0.0);
+
+        Vector sum = Vector.Zero;
+        if (Keyboard.GetKeyState(Key.W) == ButtonState.Down)
+            sum += w;
+        if (Keyboard.GetKeyState(Key.S) == ButtonState.Down)
+            sum += s;
+        if (Keyboard.GetKeyState(Key.A) == ButtonState.Down)
+            sum += a;
+        if (Keyboard.GetKeyState(Key.D) == ButtonState.Down)
+            sum += d;
+
+        pelaaja.Move(sum * pelaaja.Nopeus);
     }
 
     /// <summary>
@@ -2730,7 +2745,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             else
             {
                 a.Velocity = new Vector(0.0, 0.0);
-                a.IgnoresCollisionResponse = true;
+                a.Body.IsCollidable = false;
             }
             //tuhoutuva.Kesto.Value -= pelaaja.ValittuAse.TuhovoimaTuhoutuviaVastaan;
             Damagea(tuhoutuva, pelaaja.ValittuAse.TuhovoimaTuhoutuviaVastaan);
@@ -2815,7 +2830,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// Ladataan pelaajan kulloinkin valittuna oleva ase.
     /// </summary>
     /// <param name="pelaaja">Pelaaja, jonka ase ladataan.</param>
-    void Lataa(Pelaaja pelaaja)
+    public void Lataa(Pelaaja pelaaja, bool playSound = true)
     {
         // Ammo.Value == valitun aseen senhetkinen lippaassa oleva ammusmäärä
         // Ammo.MaxValue == valitun aseen maksimimäärä ammuksia lippaassa
@@ -2830,7 +2845,8 @@ public class MW2_My_Warfare_2_ : PhysicsGame
 
         // montako ammusta on käytetty lippaasta
         int lippaastaKaytettyjaAmmuksia = pelaaja.ValittuAse.Ammo.MaxValue - pelaaja.ValittuAse.Ammo.Value;
-        aseLatausAani.Play();
+        if (playSound)
+            aseLatausAani.Play();
         if (pelaaja.ValittuAse.MaxAmmo.Value >= pelaaja.ValittuAse.Ammo.MaxValue) pelaaja.ValittuAse.Ammo.Value = pelaaja.ValittuAse.Ammo.MaxValue;
         else pelaaja.ValittuAse.Ammo.Value = pelaaja.ValittuAse.MaxAmmo.Value;
 
@@ -3067,7 +3083,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             pelaaja.StoppedShooting(pelaaja);
     }*/
 
-    void PaivitaPelaajanKuvaJaHUD(Pelaaja pelaaja)
+    public void PaivitaPelaajanKuvaJaHUD(Pelaaja pelaaja)
     {
         if (pelaaja == pelaajat[0])
         {
@@ -3141,10 +3157,10 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     {
         // Pelaajan 1 ohjaimet
         Keyboard.Listen(Key.Escape, Jypeli.ButtonState.Pressed, LuoPauseValikko, "Lopeta peli");
-        Keyboard.Listen(Key.W, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0], new Vector(0.0, 1.0));
-        Keyboard.Listen(Key.S, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0], new Vector(0.0, -1.0));
-        Keyboard.Listen(Key.A, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0], new Vector(-1.0, 0.0));
-        Keyboard.Listen(Key.D, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0], new Vector(1.0, 0.0));
+        Keyboard.Listen(Key.W, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0]);
+        Keyboard.Listen(Key.S, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0]);
+        Keyboard.Listen(Key.A, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0]);
+        Keyboard.Listen(Key.D, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0]);
         Keyboard.Listen(Key.R, Jypeli.ButtonState.Pressed, delegate
         {
             lippaanPoistoAani.Play();
@@ -3177,6 +3193,18 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         Keyboard.Listen(Key.NumPad9, ButtonState.Pressed, delegate { Add(fysLaskuri); }, null);
         Keyboard.Listen(Key.O, ButtonState.Pressed, LuoHelikopteri, null, pelaajat[0].tahtain.Position);
         Keyboard.Listen(Key.U, ButtonState.Pressed, delegate { AikaKentanAlusta.SecondCounter.Value = 1000; MessageDisplay.Add("[TESTI] Kaikki aseet avattu!"); }, null); // avataan kaikki aseet saataville laatikoista
+
+        Keyboard.Listen(Key.K, ButtonState.Pressed, delegate { pos1 = Mouse.PositionOnWorld; }, null);
+        Keyboard.Listen(Key.L, ButtonState.Pressed, delegate { pos2 = Mouse.PositionOnWorld; }, null);
+        Keyboard.Listen(Key.J, ButtonState.Pressed, DrawRoute, null);
+        Keyboard.Listen(Key.N, ButtonState.Pressed, delegate
+        {
+            pos1 = Mouse.PositionOnWorld;
+            MessageDisplay.Add(pos1.ToString());
+            IntPoint pos = KentanOsat.GetCorrespondingNode(pos1);
+            MessageDisplay.Add(pos.ToString() + ", Full: " + KentanOsat.Nodes[pos.X, pos.Y].IsFull.ToString());
+            MessageDisplay.Add(KentanOsat.GetPositionOnWorld(pos).ToString());
+        }, null);
 #endif
 
         // Pelaajan 2 ohjaimet
@@ -3213,7 +3241,9 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// </summary>
     void AsetaSandboxOhjaimet()
     {
-        Keyboard.Listen(Key.Space, ButtonState.Pressed, delegate { LuoTuhoutuvaKentanOsa(SijoitaKentanosaRuudukkoon(pelaajat[0].tahtain.Position), 50, 50, new IntPoint(0, 0), kivenKuva, "kivi", 20, 1.0, 1.0); }, null);
+        Keyboard.Listen(Key.Space, ButtonState.Pressed, delegate { 
+            LuoTuhoutuvaKentanOsa(SijoitaKentanosaRuudukkoon(pelaajat[0].tahtain.Position), 50, 50, new IntPoint(0, 0), kivenKuva, "kivi", 20, 1.0, 1.0);           
+        }, null);
         Keyboard.Listen(Key.K, ButtonState.Pressed, delegate { LuoKillBall(pelaajat[0].tahtain.Position); }, null);
         Keyboard.Listen(Key.T, ButtonState.Pressed, delegate { LuoTynnyri(SijoitaKentanosaRuudukkoon(pelaajat[0].tahtain.Position), 50.0, 50.0, null); }, null);
         Keyboard.Listen(Key.O, ButtonState.Pressed, LuoHelikopteri, null, pelaajat[0].tahtain.Position);
@@ -3241,8 +3271,14 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// </summary>
     void AsetaSurvivalOhjaimet()
     {
-        Keyboard.Listen(Key.Space, ButtonState.Pressed, delegate { AsetaSeina(pelaajat[0]); }, null);
-        ControllerOne.Listen(Button.B, ButtonState.Pressed, delegate { AsetaSeina(pelaajat[1]); }, null);
+        Keyboard.Listen(Key.Space, ButtonState.Pressed, delegate {
+            AsetaSeina(pelaajat[0]);
+            Infinite.CurrentGame.aiUpdater.UpdateRoutesForAddedWalls();
+        }, null);
+        ControllerOne.Listen(Button.B, ButtonState.Pressed, delegate {
+            AsetaSeina(pelaajat[1]);
+            Infinite.CurrentGame.aiUpdater.UpdateRoutesForAddedWalls();
+        }, null);
     }
 
     #endregion

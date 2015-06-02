@@ -22,10 +22,7 @@ namespace Jypeli.Assets
             set
             {
                 path = value;
-                if ( wayPointIndex >= value.Count )
-                {
-                    wayPointIndex = 0;
-                }
+                wayPointIndex = 0;
             }
         }
 

@@ -119,14 +119,17 @@ namespace Jypeli
             TagsToFollow = new List<string>();
             DistanceToTarget = new DoubleMeter( double.PositiveInfinity, 0, double.PositiveInfinity );
 
-            for ( int i = 0; i < targets.Length; i++ )
+            if (targets != null)
             {
-                if ( targets[i] is IGameObject )
-                    ObjectsToFollow.Add( (IGameObject)targets[i] );
-                else if ( targets[i] is string )
-                    TagsToFollow.Add( (string)targets[i] );
-                else
-                    throw new ArgumentException( string.Format("Target type not recognized: {0} ({1})", targets[i].ToString(), targets[i].GetType().Name) );
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    if (targets[i] is IGameObject)
+                        ObjectsToFollow.Add((IGameObject)targets[i]);
+                    else if (targets[i] is string)
+                        TagsToFollow.Add((string)targets[i]);
+                    else
+                        throw new ArgumentException(string.Format("Target type not recognized: {0} ({1})", targets[i].ToString(), targets[i].GetType().Name));
+                }
             }
 
             FollowComparer = CreateDistanceComparer( 20 );

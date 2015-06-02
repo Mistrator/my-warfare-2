@@ -65,7 +65,6 @@ public class Vihollinen : Elava
     /// Peli, jossa vihollinen on.
     /// </summary>
     private PhysicsGame peliJossaOn;
-
     private Infinite infiniteJossaOn;
 
     /// <summary>
@@ -78,9 +77,12 @@ public class Vihollinen : Elava
     /// </summary>
     public Image KuolemaEfektinPartikkeliKuva { get; set; }
 
+    public FollowerBrain SeuraamisAivot;
+    public PathFollowerBrain ReittiAivot;
 
-    public FollowerBrain HyokkaysAivot { get; set; }
-    public PathFollowerBrain ReittiAivot { get; set; }
+    public bool HasRoute = false;
+
+    public Pelaaja NextTarget;
 
     /// <summary>
     /// Luodaan uusi vihollinen.
@@ -102,9 +104,6 @@ public class Vihollinen : Elava
         this.Add(this.ValittuAse);
         this.LiikkumisNopeus = liikkumisNopeus;
         this.OnkoAsetta = onkoAsetta;
-        this.HyokkaysAivot = LuoHyokkaysAivot(kohteet, liikkumisNopeus);
-        this.ReittiAivot = LuoReittiAivot(liikkumisNopeus);
-        this.Brain = HyokkaysAivot;
         this.Kohteet = kohteet;
         this.peliJossaOn = peli;
         this.infiniteJossaOn = infinite;
@@ -115,6 +114,11 @@ public class Vihollinen : Elava
         this.CollisionIgnoreGroup = 5; // se vaan on 5
         this.Mass = 1000;
         this.Tag = "vihollinen";
+        this.SeuraamisAivot = LuoHyokkaysAivot(liikkumisNopeus);
+        this.ReittiAivot = LuoReittiAivot(liikkumisNopeus);
+
+        if (MW2_My_Warfare_2_.Peli.KentanOsat == null)  
+            this.PaivitaTekoaly();
     }
 
     /// <summary>
@@ -141,9 +145,6 @@ public class Vihollinen : Elava
         this.EtaisyysJoltaAmpuu = kopioitavaVihollinen.EtaisyysJoltaAmpuu;
         this.AmpumisTarkkuus = kopioitavaVihollinen.AmpumisTarkkuus;
         this.OnkoAsetta = kopioitavaVihollinen.OnkoAsetta;
-        this.HyokkaysAivot = LuoHyokkaysAivot(kopioitavaVihollinen.Kohteet, kopioitavaVihollinen.LiikkumisNopeus);
-        this.ReittiAivot = LuoReittiAivot(kopioitavaVihollinen.LiikkumisNopeus);
-        this.Brain = HyokkaysAivot;
         this.peliJossaOn = kopioitavaVihollinen.peliJossaOn;
         this.infiniteJossaOn = kopioitavaVihollinen.infiniteJossaOn;
         this.OnkoSuicideAttacker = kopioitavaVihollinen.OnkoSuicideAttacker;
@@ -151,19 +152,23 @@ public class Vihollinen : Elava
         //peliJossaOn.AddCollisionHandler(this, "pelaaja", TormaaPelaajaan);
         this.Mass = kopioitavaVihollinen.Mass;
         this.Tag = "vihollinen";
+        this.SeuraamisAivot = LuoHyokkaysAivot(kopioitavaVihollinen.LiikkumisNopeus);
+        this.ReittiAivot = LuoReittiAivot(kopioitavaVihollinen.LiikkumisNopeus);
+
+        if (MW2_My_Warfare_2_.Peli.KentanOsat == null)
+            this.PaivitaTekoaly();
     }
 
+    #region tekoaly
     /// <summary>
     /// Luodaan viholliselle aivot.
     /// </summary>
     /// <param name="kohteet">Mitä kohteita vihollinen seuraa.</param>
     /// <param name="nopeus">Miten nopeasti vihollinen liikkuu.</param>
     /// <returns></returns>
-    private FollowerBrain LuoHyokkaysAivot(Pelaaja[] kohteet, double nopeus)
+    private FollowerBrain LuoHyokkaysAivot(double nopeus)
     {
-        FollowerBrain seuraamisAivot;
-        if (kohteet[1] == null) seuraamisAivot = new FollowerBrain(kohteet[0]);
-        else seuraamisAivot = new FollowerBrain(kohteet);
+        FollowerBrain seuraamisAivot = new FollowerBrain();
         seuraamisAivot.Speed = nopeus;
         seuraamisAivot.TurnWhileMoving = true;
         if (this.OnkoAsetta)
@@ -177,10 +182,200 @@ public class Vihollinen : Elava
     private PathFollowerBrain LuoReittiAivot(double nopeus)
     {
         PathFollowerBrain reittiAivot = new PathFollowerBrain(nopeus);
-        reittiAivot.Loop = true;
         reittiAivot.TurnWhileMoving = true;
         return reittiAivot;
     }
+
+    public void PaivitaTekoaly()
+    {
+        /* Jos näkyvissä on pelaaja/pelaajia, vihollinen seuraa sitä (lähintä).
+         * Jos ei, lasketaan reitti lähimpään Dijkstralla.
+         * Kun reitti on laskettu, tarkistetaan usein, näkyykö pelaajia tai onko reitti vanhentunut (pelaajat liian kaukana päätepisteestä).
+         * -> Jos reitti on vanhentunut, lasketaan uusi.
+         * -> Jos pelaaja näkyy, vihollinen lähtee seuraamaan sitä.
+         */
+        if (Kohteet == null || Kohteet.Length == 0) return;
+        if (double.IsNaN(this.Position.X)) return; // karua mutta joskus tuli nan
+
+        List<Pelaaja> targets = new List<Pelaaja>();
+        for (int i = 0; i < Kohteet.Length; i++)
+        {
+            if (Kohteet[i] != null && Kohteet[i].IsAddedToGame)
+                targets.Add(Kohteet[i]);
+        }
+
+        if (targets.Count == 0) return;
+
+        // jos ei ole navmeshiä, käytetään followerbrainia
+        if (MW2_My_Warfare_2_.Peli.KentanOsat == null)
+        {
+            ActivateFollowerBrain(targets.ToArray());
+            return;
+        }
+
+
+        Tuple<Pelaaja, bool> closestData = EtsiLahinNakyvaPelaaja(this.Position, targets);
+        if (closestData.Item2) // oli näkyvissä oleva pelaaja
+        {
+            ActivateFollowerBrain(closestData.Item1);
+            return;
+        }
+        /* Tutkitaan, miten kaukana pelaajat ovat tämänhetkisen reitin päätepisteestä. Jos matkaa on liikaa, lasketaan uusi reitti.
+         * Uusi reitti lasketaan kuitenkin vihollista lähimpään pelaajaan, ei päätepistettä lähimpään.
+         */
+
+        if (this.HasRoute)
+        {
+            Pelaaja lahin = EtsiLahinPelaaja(this.ReittiAivot.Path[this.ReittiAivot.Path.Count - 1], targets);
+            double d = Vector.Distance(this.ReittiAivot.Path[this.ReittiAivot.Path.Count - 1], lahin.Position);
+
+            if (d > Vakiot.DISTANCE_TO_REFRESH_ROUTE)
+            {
+                this.HasRoute = false;
+            }
+            else return;
+        }
+
+        // lisätään vihollinen jonoon reitin laskentaa varten
+        NextTarget = closestData.Item1;
+        infiniteJossaOn.aiUpdater.EnqueueForPathfindingUpdate(this);
+    }
+
+    /// <summary>
+    /// Lasketaan Dijkstralla reitti kohteeseen ja liikutaan sinne.
+    /// Kohde on NextTarget.
+    /// </summary>
+    public void FindAndUseRoute()
+    {
+        List<Vector> reitti = new List<Vector>();
+        try
+        {
+            reitti = MW2_My_Warfare_2_.Peli.KentanOsat.GetRouteCoordinates(
+                        MW2_My_Warfare_2_.Peli.KentanOsat.DijkstraSearch(
+                        MW2_My_Warfare_2_.Peli.KentanOsat.GetCorrespondingNode(this.Position),
+                        MW2_My_Warfare_2_.Peli.KentanOsat.GetCorrespondingNode(NextTarget.Position)));
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // tähän tullaan jos reitti menee navmeshin ulkopuolelle
+            // laitetaan followerbrain päälle jos ei saada reittiä laskettua
+            ActivateFollowerBrain(NextTarget);
+            return;
+        }
+        ActivatePathfindingBrain(reitti);
+        NextTarget = null;
+    }
+
+    void ActivateFollowerBrain(Pelaaja target)
+    {
+        this.ReittiAivot.Active = false;
+        this.SeuraamisAivot.Active = true;
+        this.Brain = SeuraamisAivot;
+        this.SeuraamisAivot.ObjectsToFollow.Clear();
+        this.SeuraamisAivot.ObjectsToFollow.Add(target);
+
+        this.HasRoute = false; // etsitään dijkstralla uusi reitti otettaessa se käyttöön
+    }
+
+    void ActivateFollowerBrain(Pelaaja[] targets)
+    {
+        this.ReittiAivot.Active = false;
+        this.SeuraamisAivot.Active = true;
+        this.Brain = SeuraamisAivot;
+        this.SeuraamisAivot.ObjectsToFollow.Clear();
+        this.SeuraamisAivot.ObjectsToFollow.AddRange(targets);
+
+        this.HasRoute = false; // etsitään dijkstralla uusi reitti otettaessa se käyttöön
+    }
+
+
+    void ActivatePathfindingBrain(List<Vector> route)
+    {
+        this.SeuraamisAivot.Active = false;
+        this.ReittiAivot.Active = true;
+        this.Brain = ReittiAivot;
+        this.ReittiAivot.Path = route;
+        this.HasRoute = true;
+        this.ReittiAivot.ArrivedAtEnd += delegate { this.HasRoute = false; };
+
+#if DEBUG
+        MW2_My_Warfare_2_.Peli.searchCount++;
+        MW2_My_Warfare_2_.Peli.MessageDisplay.Add("Search count: " + MW2_My_Warfare_2_.Peli.searchCount.ToString());
+        for (int i = 0; i < route.Count; i++)
+        {
+            GameObject marker = new GameObject(10, 10);
+            marker.Color = Color.Red;
+            marker.Position = route[i];
+            marker.MaximumLifetime = TimeSpan.FromSeconds(3.0);
+            MW2_My_Warfare_2_.Peli.Add(marker);
+        }
+#endif
+
+    }
+
+
+    /// <summary>
+    /// Etsii lähimmän näkyvän pelaajan. Jos ei ole näkyviä, palauttaa lähimmän piilossa olevan pelaajan.
+    /// </summary>
+    /// <returns>Pelaaja-lähin pelaaja, bool-oliko pelaaja näkyvissä</returns>
+    Tuple<Pelaaja, bool> EtsiLahinNakyvaPelaaja(Vector observerPosition, List<Pelaaja> targets)
+    {
+        double seenDistance = double.MaxValue;
+        double generalDistance = double.MaxValue;
+        int closestSeen = -1;
+        int closestGeneral = -1;
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            double currentDistance = Vector.Distance(targets[i].Position, observerPosition);
+            if (currentDistance < generalDistance)
+            {
+                generalDistance = currentDistance;
+                closestGeneral = i;
+            }
+
+            if (SeesObject(targets[i], x => x is PhysicsObject && ((PhysicsObject)x).IsStatic)) // ainoastaan staattiset objektit estävät kulkemisen
+            {
+                if (currentDistance < seenDistance)
+                {
+                    seenDistance = currentDistance;
+                    closestSeen = i;
+                }
+            }
+        }
+        if (closestSeen != -1)
+        {
+            return new Tuple<Pelaaja, bool>(targets[closestSeen], true);
+        }
+        else return new Tuple<Pelaaja, bool>(targets[closestGeneral], false);
+    }
+
+    /// <summary>
+    /// Etsii pistettä lähimmän pelaajan.
+    /// </summary>
+    /// <param name="position"></param>
+    /// <param name="targets"></param>
+    /// <returns></returns>
+    Pelaaja EtsiLahinPelaaja(Vector position, List<Pelaaja> targets)
+    {
+        if (targets == null || targets.Count == 0) return null;
+
+        double distance = double.MaxValue;
+        int index = -1;
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            double d = Vector.Distance(position, targets[i].Position);
+            if (d < distance)
+            {
+                distance = d;
+                index = i;
+            }
+        }
+        return targets[index];
+    }
+
+    #endregion
 
     /// <summary>
     /// Ammutaan vihollisen aseella, jos sellainen on.

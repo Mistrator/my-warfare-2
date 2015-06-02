@@ -136,6 +136,7 @@
     <Compile Include="DataTypes\UnlimitedAngle.cs" />
     <Compile Include="GameObjects\GameObject\Oscillator.cs" />
     <Compile Include="Effects\Lightning.cs" />
+    <Compile Include="GameObjects\PhysicsObject\Destruction.cs" />
     <Compile Include="GameObjects\PhysicsObject\Fire.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\PhysicsGame.cs" />

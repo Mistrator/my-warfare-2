@@ -21,6 +21,8 @@ public class Tuhoutuva : PhysicsObject
         set { kesto = value; }
     }
 
+    public bool Shatters { get; set; }
+
     private static Timer destructionTimer;
     private static int destructionsInSecond;
     private const int MAX_DESTRUCTIONS_IN_SECOND = 150;
@@ -36,6 +38,7 @@ public class Tuhoutuva : PhysicsObject
         this.kesto = new DoubleMeter(kesto);
         this.kesto.MinValue = 0;
         IsUpdated = true;
+        Shatters = true;
         Ignited += delegate(PhysicsObject p) {
             Flame f = Partikkelit.CreateFlames(this.Position + RandomGen.NextVector(-this.Width / 4, this.Width / 4), 100);
             Extinguished += delegate(PhysicsObject p2) {
@@ -44,8 +47,8 @@ public class Tuhoutuva : PhysicsObject
                 Timer.SingleShot(2, delegate { f.Destroy(); });
             };
         };
-        this.kesto.LowerLimit += delegate { Extinquish(); };
-        this.kesto.LowerLimit += delegate { HajotaPaloiksi(); };
+        this.kesto.LowerLimit += Extinquish;
+        this.kesto.LowerLimit += HajotaPaloiksi;
     }
 
     public override void Update(Time time)
@@ -68,10 +71,13 @@ public class Tuhoutuva : PhysicsObject
 
     public void HajotaPaloiksi()
     {
+        if (!Shatters) return;
+
         Vector maxShardSize = new Vector(this.Width, this.Height);
         ObjSlicer(this,
             50, maxShardSize, 5); // 4
         this.Destroy();
+
     }
 
     private void ObjSlicer(PhysicsObject obj, int maxShards, Vector maxShardSize, double minShardSize)

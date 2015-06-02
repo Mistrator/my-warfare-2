@@ -25,5 +25,21 @@ namespace Jypeli
             this.X = x;
             this.Y = y;
         }
+
+        public static bool operator ==(IntPoint first, IntPoint second)
+        {
+            if (first.X == second.X && first.Y == second.Y) return true;
+            return false;
+        }
+
+        public static bool operator !=(IntPoint first, IntPoint second)
+        {
+            return !(first == second);
+        }
+
+        public override string ToString()
+        {
+            return "(" + this.X + ", " + this.Y + ")";
+        }
     }
 }

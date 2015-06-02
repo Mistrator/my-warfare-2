@@ -50,6 +50,8 @@ public class Infinite
     /// </summary>
     public Timer KamanSpawnausAjastin { get; set; }
 
+    public AIUpdater aiUpdater { get; set; }
+
     /// <summary>
     /// Montako vihollista voi spawnata maksimissaan yhtä spawnauskierrosta kohti.
     /// </summary>
@@ -126,6 +128,8 @@ public class Infinite
         this.RespauksiaJaljellaYhteensa = new IntMeter(respaustenMaara, 0, Int32.MaxValue);
         this.RespauksiaJaljellaYhteensa.LowerLimit += delegate { PeliPaattyi(this); };
         this.MonestikoRespattuYhteensa = new IntMeter(0);
+
+        LuoTekoalySaie();
     }
 
     /// <summary>
@@ -146,7 +150,7 @@ public class Infinite
         this.TallaSpawnauskerrallaSpawnattavatViholliset.Clear();
         if (VihollisTyypit.Count == 0) return; // ei spawnata, jos ei ole spawnattavaa
         if (SpawnataankoVihollisia == false) return; // ei spawnata, jos ei pidä spawnata
-        if (VihollisetKentalla.Count >= VihollistenMaxMaaraPelissa) return; // ei spawnata, jos on liikaa vihuja ruudulla
+        if (VihollisetKentalla.Count >= VihollistenMaxMaaraPelissa) return; // ei spawnata, jos on liikaa vihuja kentällä
 
         int vihollistenMaaraTallaKierroksella = RandomGen.NextInt(1, this.VihollistenMaxMaaraYhdellaSpawnauskierroksella + 1); // montako vihollista spawnataan tällä kierroksella
 
@@ -171,5 +175,17 @@ public class Infinite
     public void LisaaFixedSpawni(Vector spawniPaikka)
     {
         this.VihollistenFixedSpawnit.Add(spawniPaikka);
+    }
+
+    public void LuoTekoalySaie()
+    {
+        System.Threading.Thread t = new System.Threading.Thread(AlustaTekoaly);
+        t.Start();
+    }
+
+    public void AlustaTekoaly()
+    {
+        aiUpdater = new AIUpdater();
+        aiUpdater.InitializeAI(VihollisetKentalla);
     }
 } 

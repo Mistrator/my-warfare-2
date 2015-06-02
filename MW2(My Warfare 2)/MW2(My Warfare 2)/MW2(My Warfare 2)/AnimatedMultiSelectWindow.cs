@@ -38,8 +38,11 @@ public class AnimatedMultiSelectWindow : MultiSelectWindow
         SelectionHighlighter.IgnoresCollisionResponse = true;
 
         this.AddedToGame += delegate {
-            MW2_My_Warfare_2_.Peli.Add(SelectionHighlighter);
-            SelectionHighlighter.Position = this.Buttons[0].AbsolutePosition;
+            Timer.SingleShot(0.01, delegate
+            {
+                MW2_My_Warfare_2_.Peli.Add(SelectionHighlighter);
+                SelectionHighlighter.Position = this.Buttons[0].Position;
+            });
         };
 
         this.Closed += delegate { SelectionHighlighter.Destroy(); };

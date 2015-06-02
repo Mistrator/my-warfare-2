@@ -317,6 +317,16 @@ public class Pelaaja : Elava
             if (MW2_My_Warfare_2_.Peli.CurrentGameMode == Gamemode.SurvivalSingle)
                 MW2_My_Warfare_2_.Peli.KirkastaRuutua(0.03, 1.0);
         }
+
+        // ladataan aseet respauksessa
+        for (int j = 0; j < this.Aseet.Count; j++)
+        {
+            this.ValitseAse(j);
+            MW2_My_Warfare_2_.Peli.Lataa(this, false);
+        }
+
+        this.ValitseAse(0);
+        MW2_My_Warfare_2_.Peli.PaivitaPelaajanKuvaJaHUD(this);
     }
 
     /// <summary>
@@ -409,6 +419,15 @@ public class Pelaaja : Elava
         {
             if (aseet[i].Tag.ToString() == tag) valittuAse = aseet[i];
         }
+    }
+
+    public void ValitseAse(int i)
+    {
+        if (this.Aseet == null || this.Aseet.Count == 0) return;
+
+        if (i < 0 || i > this.Aseet.Count - 1) return;
+
+        valittuAse = Aseet[i];
     }
 
     /// <summary>
