@@ -117,6 +117,7 @@
     <Compile Include="Asetukset.cs" />
     <Compile Include="AsetustenKaytto.cs" />
     <Compile Include="Blood.cs" />
+    <Compile Include="Efektit.cs" />
     <Compile Include="Escape.cs" />
     <Compile Include="Elävä.cs" />
     <Compile Include="Gamemode.cs" />

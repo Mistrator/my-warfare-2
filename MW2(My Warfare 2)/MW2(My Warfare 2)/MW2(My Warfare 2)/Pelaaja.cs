@@ -307,7 +307,8 @@ public class Pelaaja : Elava
         }
         this.Velocity = Vector.Zero;
         this.Position = this.SpawnausPaikat[i];
-        this.tahtain.Position = this.SpawnausPaikat[i];
+        if (this.tahtain != null)
+            this.tahtain.Position = this.SpawnausPaikat[i];
         this.Hit(new Vector(0.01, 0.01));
         KranaattienMaara = Vakiot.PELAAJAN_KRANAATTIEN_OLETUSMAARA;
         if (this.Taskulamppu != null)

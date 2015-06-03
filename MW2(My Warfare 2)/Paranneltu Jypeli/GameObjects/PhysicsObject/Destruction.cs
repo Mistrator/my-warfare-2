@@ -10,6 +10,10 @@ namespace Jypeli
     {
         public bool IsShattered { get; private set; }
 
+        public delegate PhysicsObject ShatterHandler(double width, double height, Vector position);
+
+        public ShatterHandler CreateShard;
+
         /// <summary>
         /// Hajottaa olion pienempiin palasiin.
         /// </summary>
@@ -18,6 +22,7 @@ namespace Jypeli
         {
             if (this.Width < minSideLength || this.Height < minSideLength) return;
             if (this.IsShattered) return;
+            if (CreateShard == null) return;
 
             Angle parentAngle = this.Angle;
             this.Angle = Angle.Zero;
@@ -25,37 +30,29 @@ namespace Jypeli
             Vector splitPoint = RandomGen.NextVector(this.Width / 4, this.Height / 4, 3 * (this.Width / 4), 3 * (this.Height / 4)); // 0 - width/height, sallittu alue 1/4 - 3/4
             Vector topLeftCorner = new Vector(this.Position.X - this.Width / 2, this.Position.Y + this.Height / 2);
 
-            PhysicsObject topLeft = new PhysicsObject(splitPoint.X, splitPoint.Y);
-            topLeft.Position = new Vector(topLeftCorner.X + splitPoint.X / 2, topLeftCorner.Y - splitPoint.Y / 2);
-            //topLeft.X = topLeft.X * Math.Cos(parentAngle.Radians) - topLeft.Y * Math.Sin(parentAngle.Radians);
-            //topLeft.Y = topLeft.X * Math.Sin(parentAngle.Radians) + topLeft.Y * Math.Cos(parentAngle.Radians);
+            PhysicsObject topLeft = CreateShard(splitPoint.X, splitPoint.Y, new Vector(topLeftCorner.X + splitPoint.X / 2, topLeftCorner.Y - splitPoint.Y / 2));
             topLeft.Angle = parentAngle;
-            topLeft.Velocity = this.Velocity;
+            // topLeft.Velocity = this.Velocity;
             topLeft.Hit(RandomGen.NextVector(-this.Velocity.Magnitude / 4, this.Velocity.Magnitude / 4));
+            topLeft.CreateShard = this.CreateShard;
 
-            PhysicsObject topRight = new PhysicsObject(this.Width - splitPoint.X, splitPoint.Y);
-            topRight.Position = new Vector(topLeftCorner.X + (splitPoint.X + (this.Width - splitPoint.X) / 2), topLeftCorner.Y - splitPoint.Y / 2);
-            //topRight.X = topRight.X * Math.Cos(parentAngle.Radians) - topRight.Y * Math.Sin(parentAngle.Radians);
-            //topRight.Y = topRight.X * Math.Sin(parentAngle.Radians) + topRight.Y * Math.Cos(parentAngle.Radians);
+            PhysicsObject topRight = CreateShard(this.Width - splitPoint.X, splitPoint.Y, new Vector(topLeftCorner.X + (splitPoint.X + (this.Width - splitPoint.X) / 2), topLeftCorner.Y - splitPoint.Y / 2));
             topRight.Angle = parentAngle;
-            topRight.Velocity = this.Velocity;
+            //topRight.Velocity = this.Velocity;
             topRight.Hit(RandomGen.NextVector(-this.Velocity.Magnitude / 4, this.Velocity.Magnitude / 4));
+            topRight.CreateShard = this.CreateShard;
 
-            PhysicsObject bottomLeft = new PhysicsObject(splitPoint.X, this.Height - splitPoint.Y);
-            bottomLeft.Position = new Vector(topLeftCorner.X + splitPoint.X / 2, topLeftCorner.Y - (splitPoint.Y + (this.Height - splitPoint.Y) / 2));
-            //bottomLeft.X = bottomLeft.X * Math.Cos(parentAngle.Radians) - bottomLeft.Y * Math.Sin(parentAngle.Radians);
-            //bottomLeft.Y = bottomLeft.X * Math.Sin(parentAngle.Radians) + bottomLeft.Y * Math.Cos(parentAngle.Radians);
+            PhysicsObject bottomLeft = CreateShard(splitPoint.X, this.Height - splitPoint.Y, new Vector(topLeftCorner.X + splitPoint.X / 2, topLeftCorner.Y - (splitPoint.Y + (this.Height - splitPoint.Y) / 2)));
             bottomLeft.Angle = parentAngle;
-            bottomLeft.Velocity = this.Velocity;
+            //bottomLeft.Velocity = this.Velocity;
             bottomLeft.Hit(RandomGen.NextVector(-this.Velocity.Magnitude / 4, this.Velocity.Magnitude / 4));
+            bottomLeft.CreateShard = this.CreateShard;
 
-            PhysicsObject bottomRight = new PhysicsObject(this.Width - splitPoint.X, this.Height - splitPoint.Y);
-            bottomRight.Position = new Vector(topLeftCorner.X + (splitPoint.X + (this.Width - splitPoint.X) / 2), topLeftCorner.Y - (splitPoint.Y + (this.Height - splitPoint.Y) / 2));
-            //bottomRight.X = bottomRight.X * Math.Cos(parentAngle.Radians) - bottomRight.Y * Math.Sin(parentAngle.Radians);
-            //bottomRight.Y = bottomRight.X * Math.Sin(parentAngle.Radians) + bottomRight.Y * Math.Cos(parentAngle.Radians);
+            PhysicsObject bottomRight = CreateShard(this.Width - splitPoint.X, this.Height - splitPoint.Y, new Vector(topLeftCorner.X + (splitPoint.X + (this.Width - splitPoint.X) / 2), topLeftCorner.Y - (splitPoint.Y + (this.Height - splitPoint.Y) / 2)));
             bottomRight.Angle = parentAngle;
-            bottomRight.Velocity = this.Velocity;
+            //bottomRight.Velocity = this.Velocity;
             bottomRight.Hit(RandomGen.NextVector(-this.Velocity.Magnitude / 4, this.Velocity.Magnitude / 4));
+            bottomRight.CreateShard = this.CreateShard;
 
             // paloitellaan kuva
             if (this.Image != null)
@@ -138,7 +135,7 @@ namespace Jypeli
             if (!bottomRight.IsDestroying) bottomRight.Shatter(minSideLength, impact);
 
             this.IsShattered = true;
-            // this.Destroy();
+            this.Destroy();
         }
 
         /// <summary>

@@ -116,6 +116,7 @@ public class Vihollinen : Elava
         this.Tag = "vihollinen";
         this.SeuraamisAivot = LuoHyokkaysAivot(liikkumisNopeus);
         this.ReittiAivot = LuoReittiAivot(liikkumisNopeus);
+        this.CreateShard += Shard;
 
         if (MW2_My_Warfare_2_.Peli.KentanOsat == null)  
             this.PaivitaTekoaly();
@@ -154,6 +155,7 @@ public class Vihollinen : Elava
         this.Tag = "vihollinen";
         this.SeuraamisAivot = LuoHyokkaysAivot(kopioitavaVihollinen.LiikkumisNopeus);
         this.ReittiAivot = LuoReittiAivot(kopioitavaVihollinen.LiikkumisNopeus);
+        this.CreateShard += Shard;
 
         if (MW2_My_Warfare_2_.Peli.KentanOsat == null)
             this.PaivitaTekoaly();
@@ -299,8 +301,6 @@ public class Vihollinen : Elava
         this.ReittiAivot.ArrivedAtEnd += delegate { this.HasRoute = false; };
 
 #if DEBUG
-        MW2_My_Warfare_2_.Peli.searchCount++;
-        MW2_My_Warfare_2_.Peli.MessageDisplay.Add("Search count: " + MW2_My_Warfare_2_.Peli.searchCount.ToString());
         for (int i = 0; i < route.Count; i++)
         {
             GameObject marker = new GameObject(10, 10);
@@ -450,7 +450,7 @@ public class Vihollinen : Elava
         if (infiniteJossaOn != null)
             infiniteJossaOn.VihollisetKentalla.Remove(this);
         Blood.AddDeathSplatter(this.Position, 3, 0.4);
-        this.Destroy();
+        this.Shatter(Vakiot.SHATTER_SIZE, Vector.Zero);
     }
 
     /// <summary>
@@ -477,5 +477,28 @@ public class Vihollinen : Elava
         kuolemaefekti.Position = this.Position;
         peliJossaOn.Add(kuolemaefekti);
         kuolemaefekti.AddEffect(this.Position, 50);
+    }
+
+    public void HajotaPaloiksi()
+    {
+        if (this.IsShattered) return;
+
+        Shatter(Vakiot.SHATTER_SIZE, Vector.Zero);
+    }
+
+    public PhysicsObject Shard(double width, double height, Vector position)
+    {
+        PhysicsObject shard = new PhysicsObject(width, height);
+        shard.Position = position;
+        MW2_My_Warfare_2_.Peli.Efektit.LisaaAjastettuSirpale(shard, Vakiot.ENEMY_PART_LIFETIME);
+
+        shard.LinearDamping = RandomGen.NextDouble(0.80, 0.90);
+        shard.AngularDamping = 0.90;
+        shard.CanBurn = false;
+        shard.Mass = 1;
+        shard.Hit(RandomGen.NextVector(100.0, 500.0));
+
+        return shard;
+
     }
 }

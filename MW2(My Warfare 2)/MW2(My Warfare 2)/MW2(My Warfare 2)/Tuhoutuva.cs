@@ -23,15 +23,6 @@ public class Tuhoutuva : PhysicsObject
 
     public bool Shatters { get; set; }
 
-    private static Timer destructionTimer;
-    private static int destructionsInSecond;
-    private const int MAX_DESTRUCTIONS_IN_SECOND = 150;
-
-    static Tuhoutuva()
-    {
-        InitializeTimer();
-    }
-
     public Tuhoutuva(double width, double height, double kesto)
         : base(width, height, Shape.Rectangle)
     {
@@ -39,6 +30,7 @@ public class Tuhoutuva : PhysicsObject
         this.kesto.MinValue = 0;
         IsUpdated = true;
         Shatters = true;
+        this.CreateShard += Shard;
         Ignited += delegate(PhysicsObject p) {
             Flame f = Partikkelit.CreateFlames(this.Position + RandomGen.NextVector(-this.Width / 4, this.Width / 4), 100);
             Extinguished += delegate(PhysicsObject p2) {
@@ -58,22 +50,30 @@ public class Tuhoutuva : PhysicsObject
         base.Update(time);
     }
 
-    public static void InitializeTimer()
-    {
-        destructionTimer = new Timer();
-        destructionTimer.Interval = 1;
-        destructionTimer.Timeout += delegate
-        {
-            destructionsInSecond = 0;
-        };
-        destructionTimer.Start();
-    }
-
     public void HajotaPaloiksi()
     {
         if (!Shatters) return;
+        if (this.IsShattered) return;
 
-        Vector maxShardSize = new Vector(this.Width, this.Height);
+        Shatter(Vakiot.SHATTER_SIZE, Vector.Zero);
+    }
+
+    public PhysicsObject Shard(double width, double height, Vector position)
+    {
+        PhysicsObject shard = new PhysicsObject(width, height);
+        shard.Position = position;
+        MW2_My_Warfare_2_.Peli.Efektit.LisaaSirpale(shard);
+
+        shard.LinearDamping = RandomGen.NextDouble(0.80, 0.90);
+        shard.AngularDamping = 0.90;
+        shard.CanBurn = false;
+        shard.Mass = 1;
+        shard.Hit(RandomGen.NextVector(100.0, 500.0));
+
+        return shard;
+    }
+
+        /*Vector maxShardSize = new Vector(this.Width, this.Height);
         ObjSlicer(this,
             50, maxShardSize, 5); // 4
         this.Destroy();
@@ -216,22 +216,5 @@ public class Tuhoutuva : PhysicsObject
         }
 
         return box;
-    }
-
-    /// <summary>
-    /// Muutetaan fyysinen objekti tehosteobjektiksi.
-    /// </summary>
-    /// <param name="muutettava"></param>
-    void MuutaTehosteObjektiksi(Tuhoutuva muutettava)
-    {
-        if (!muutettava.IsAddedToGame) return;
-
-        GameObject sirpale = new GameObject(muutettava.Width, muutettava.Height);
-        sirpale.Image = muutettava.Image;
-        sirpale.Position = muutettava.Position;
-        sirpale.Angle = muutettava.Angle;
-        MW2_My_Warfare_2_.Peli.Add(sirpale);
-        MW2_My_Warfare_2_.Peli.LisaaTehosteObjekti(sirpale);
-        muutettava.Destroy();
-    }
+    }*/
 }

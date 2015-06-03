@@ -19,6 +19,9 @@ public abstract class Vakiot
     public const int PELAAJAN_KRANAATTIEN_OLETUSMAARA = 3;
     public const double PELAAJAN_VASYMIS_NOPEUS = 2.0;
     public const double PELAAJAN_KUNNON_PALAUTUMIS_NOPEUS = 1;
+    public const double PELAAJAN_PYORIMIS_NOPEUS_OHJAIMELLA = 2.0;
+    public const double OHJAIMEN_DEAD_ZONE_ASTEINA = 2.0;
+
     //public static readonly Vector[] PELAAJIEN_VAIHTOEHTOISET_SPAWNAUSPAIKAT = { new Vector(0, -600), new Vector(0, 700), new Vector(-1030, 1450), new Vector(1030, 1450) };
           
     public const int PARTIKKELEIDEN_MAX_MAARA = 4000;
@@ -38,6 +41,7 @@ public abstract class Vakiot
     public const double TULEN_DAMAGE_ELAVIA_VASTAAN = 0.4;
     public const string PIIKKILANKA_TAG = "piikkilanka"; // pelaajille kiinteä, zombit menevät läpi
     public const double SHATTER_SIZE = 10;
+    public static readonly TimeSpan ENEMY_PART_LIFETIME = TimeSpan.FromSeconds(3.0);
 
     #endregion
 
