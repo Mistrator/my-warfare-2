@@ -38,7 +38,7 @@ public class Efektit
         sirpale.Image = muutettava.Image;
         sirpale.Position = muutettava.Position;
         sirpale.Angle = muutettava.Angle;
-        MW2_My_Warfare_2_.Peli.Add(sirpale);
+        MW2_My_Warfare_2_.Peli.Add(sirpale, -3);
         MW2_My_Warfare_2_.Peli.Efektit.LisaaTehosteObjekti(sirpale);
         muutettava.Destroy();
     }
@@ -78,6 +78,14 @@ public class Efektit
     private void PoistaVanhaSirpale()
     {
         if (Sirpaleet.Count > Vakiot.SIRPALEIDEN_MAX_MAARA)
+        {
+            MuutaTehosteObjektiksi(Sirpaleet.Dequeue());
+        }
+    }
+
+    public void MuutaKaikkiSirpaleetTehosteiksi()
+    {
+        while (Sirpaleet.Count > 0)
         {
             MuutaTehosteObjektiksi(Sirpaleet.Dequeue());
         }

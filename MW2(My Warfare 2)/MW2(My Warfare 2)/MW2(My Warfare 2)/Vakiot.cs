@@ -11,6 +11,8 @@ public abstract class Vakiot
 {
     #region Peli
 
+    public static readonly TimeSpan MINIMUM_FPS = TimeSpan.FromSeconds(1.0 / 59.0); // pyritään pyörittämään peliä min 30 fps
+
     public const int PELAAJIEN_MAARA = 2;
     public const double PELAAJIEN_ELAMIEN_MAARA = 20.0;
     public const double PELAAJAN_ELAMIEN_REGENEROITUMISVAUHTI = 3.0;
@@ -41,7 +43,7 @@ public abstract class Vakiot
     public const double TULEN_DAMAGE_ELAVIA_VASTAAN = 0.4;
     public const string PIIKKILANKA_TAG = "piikkilanka"; // pelaajille kiinteä, zombit menevät läpi
     public const double SHATTER_SIZE = 10;
-    public static readonly TimeSpan ENEMY_PART_LIFETIME = TimeSpan.FromSeconds(3.0);
+    public static readonly TimeSpan ENEMY_PART_LIFETIME = TimeSpan.FromSeconds(1.0);
 
     #endregion
 

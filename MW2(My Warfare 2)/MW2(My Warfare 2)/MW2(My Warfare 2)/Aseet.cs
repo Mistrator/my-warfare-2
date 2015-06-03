@@ -57,7 +57,7 @@ public static class Aseet
     public static Image haulikonHylsyKuva = MW2_My_Warfare_2_.LoadImage("haulikonhylsy_ammuttu");
     public static Image binaryAmmusKuva = MW2_My_Warfare_2_.LoadImage("binaryluoti");
 
-    public const double KRANAATIN_MAKSIMI_DAMAGE = 25;
+    public const double KRANAATIN_MAKSIMI_DAMAGE = 30;
     public const double SINGON_MAKSIMI_DAMAGE = 45;
 
     /*
@@ -75,6 +75,20 @@ public static class Aseet
      * Therminator: 240
      */
 
+    const double PISTOOLI_AIKA = 0;
+    const double NYRKKI_AIKA = 0;
+    const double RYNKKY_AIKA = 30;
+    const double PUMPPUHAULIKKO_AIKA = 60;
+    const double MAGNUM_AIKA = 90;
+    const double SMG_AIKA = 120;
+    const double FLAREGUN_AIKA = 135;
+    const double LMG_AIKA = 150;
+    const double SNIPA_AIKA = 180;
+    const double VINTOREZ_AIKA = 210;
+    const double SARJAHAULIKKO_AIKA = 240;
+    const double SINKO_AIKA = 270;
+    const double THERMINATOR_AIKA = 300;
+
     /// <summary>
     /// Luodaan pistooli.
     /// </summary>
@@ -82,7 +96,7 @@ public static class Aseet
     public static Ase LuoPistooli()
     {
         Ase pistooli = new Ase(30, 10);
-        pistooli.aikaJolloinVoiLuoda = 0;
+        pistooli.aikaJolloinVoiLuoda = PISTOOLI_AIKA;
 
         pistooli.Ammo.Value = 20;
         pistooli.Ammo.MaxValue = 20;
@@ -98,7 +112,7 @@ public static class Aseet
         pistooli.LataukseenKuluvaAika = 1.0;
         pistooli.FireRate = 16; // 12
         pistooli.MaxAmmoLifetime = TimeSpan.FromSeconds(1.0);
-        pistooli.AseenHajoama = new Vector(-25.0, 25.0);       
+        pistooli.AseenHajoama = new Vector(-40.0, 40.0); // 25      
         
         pistooli.Tag = "pistooli";
         pistooli.AseenNimi = "Glock 18";
@@ -121,22 +135,22 @@ public static class Aseet
     public static Ase LuoRynkky()
     {
         Ase rynkky = new Ase(30, 10);
-        rynkky.aikaJolloinVoiLuoda = 15;//15
+        rynkky.aikaJolloinVoiLuoda = RYNKKY_AIKA;
 
         rynkky.Ammo.MaxValue = 30;
-        rynkky.MaxAmmo = new IntMeter(120);
-        rynkky.MaxAmmo.MaxValue = 120;
+        rynkky.MaxAmmo = new IntMeter(60); // 120
+        rynkky.MaxAmmo.MaxValue = 60;
 
         rynkky.Power.Value = 700; //450
         rynkky.Power.DefaultValue = 700;
 
-        rynkky.TuhovoimaTuhoutuviaVastaan = 1;
-        rynkky.TuhovoimaElaviaVastaan = 2.8;
+        rynkky.TuhovoimaTuhoutuviaVastaan = 2.5;
+        rynkky.TuhovoimaElaviaVastaan = 5;
 
         rynkky.LataukseenKuluvaAika = 1.5;
         rynkky.FireRate = 10.8; // 8
         rynkky.MaxAmmoLifetime = TimeSpan.FromSeconds(1.5);
-        rynkky.AseenHajoama = new Vector(-15.0, 15.0);
+        rynkky.AseenHajoama = new Vector(-20.0, 20.0); // 15
         rynkky.AseenLapaisy = 0.01;
 
         rynkky.Tag = "rynkky";
@@ -163,14 +177,14 @@ public static class Aseet
         Ase minigun = new Ase(30, 10);
         minigun.TuhovoimaTuhoutuviaVastaan = 1.0;//0.2
         minigun.TuhovoimaElaviaVastaan = 3.5; // 2.0
-        minigun.AseenHajoama = new Vector(-25.0, 25.0); // (-25.0, 25.0)
-        minigun.aikaJolloinVoiLuoda = 75;//60
+        minigun.AseenHajoama = new Vector(-60.0, 60.0); // (-25.0, 25.0)
+        minigun.aikaJolloinVoiLuoda = LMG_AIKA;
         minigun.Ammo.Value = 200;
         minigun.Ammo.MaxValue = 200;
         minigun.AttackSound = minigunAani;
         minigun.MaxAmmo = new IntMeter(200);
         minigun.MaxAmmo.MaxValue = 200;
-        minigun.Power.Value = 500; // 450
+        minigun.Power.Value = 900; // 450
         minigun.Power.DefaultValue = 900;
         minigun.LataukseenKuluvaAika = 5.0;
         minigun.FireRate = 16.7; // 30
@@ -202,7 +216,7 @@ public static class Aseet
         snipa.TuhovoimaElaviaVastaan = 20;
         snipa.LataukseenKuluvaAika = 2.0;
         snipa.AseenHajoama = new Vector(-3.0, 3.0);
-        snipa.aikaJolloinVoiLuoda = 90;//90
+        snipa.aikaJolloinVoiLuoda = SNIPA_AIKA;
         snipa.Power.Value = 800;
         snipa.Power.DefaultValue = 800;
         snipa.IsVisible = false;
@@ -236,14 +250,16 @@ public static class Aseet
         sinko.IsVisible = false;
         sinko.FireRate = 0.5; // 0.5
         sinko.MaxAmmoLifetime = TimeSpan.FromSeconds(5);
-        sinko.ProjectileCollision = MW2_My_Warfare_2_.Peli.SingonAmmusRajahtaa;
-        sinko.aikaJolloinVoiLuoda = 180;
+        sinko.ProjectileCollision = delegate(PhysicsObject ammus, PhysicsObject kohde) { MW2_My_Warfare_2_.Peli.SingonAmmusRajahtaa(ammus, kohde, sinko); };
+        sinko.aikaJolloinVoiLuoda = SINKO_AIKA;
         sinko.Tag = "sinko";
         sinko.AseenNimi = "RPG-7";
         sinko.luodinKuva = rpgAmmusKuva;
         sinko.TuleekoHylsya = false;
         sinko.Pelaajan1AseKuva = pelaaja1rpgKuva1;
         sinko.Pelaajan2AseKuva = pelaaja2rpgKuva1;
+        sinko.IsIncendiary = true;
+        sinko.IgnitionChance = 50;
         return sinko;
     }
 
@@ -271,7 +287,7 @@ public static class Aseet
         haulikko.Tag = "haulikko";
         haulikko.AseenNimi = "Remington 870";
         haulikko.AttackSound = haulikkoAani;
-        haulikko.aikaJolloinVoiLuoda = 30; //30
+        haulikko.aikaJolloinVoiLuoda = PUMPPUHAULIKKO_AIKA;
         haulikko.Pelaajan1AseKuva = pelaaja1haulikkoKuva;
         haulikko.Pelaajan2AseKuva = pelaaja2haulikkoKuva;
         haulikko.TuleekoHylsya = false;
@@ -302,7 +318,7 @@ public static class Aseet
         nyrkki.IsVisible = false;
         nyrkki.Tag = "nyrkki";
         nyrkki.AseenNimi = "Luuvitonen";
-        nyrkki.aikaJolloinVoiLuoda = 1;
+        nyrkki.aikaJolloinVoiLuoda = NYRKKI_AIKA;
         nyrkki.OnkoMeleeAse = true;
         nyrkki.Pelaajan1AseKuva = pelaaja1nyrkkiKuva;
         nyrkki.Pelaajan2AseKuva = pelaaja2nyrkkiKuva;
@@ -347,7 +363,7 @@ public static class Aseet
     public static Ase LuoMagnum()
     {
         Ase magnum = new Ase(30, 10);
-        magnum.aikaJolloinVoiLuoda = 45; //45
+        magnum.aikaJolloinVoiLuoda = MAGNUM_AIKA;
         magnum.Ammo.Value = 6;
         magnum.Ammo.MaxValue = 6;
         magnum.IsVisible = false;
@@ -358,7 +374,7 @@ public static class Aseet
         magnum.TuhovoimaTuhoutuviaVastaan = 5;
         magnum.LataukseenKuluvaAika = 3.0;
         magnum.AseenHajoama = new Vector(-10.0, 10.0);
-        magnum.FireRate = 1.5;
+        magnum.FireRate = 7;
         magnum.MaxAmmoLifetime = TimeSpan.FromSeconds(2.0);
         magnum.Tag = "magnum";
         magnum.AseenNimi = ".44 Magnum";
@@ -375,7 +391,7 @@ public static class Aseet
     public static Ase LuoOhjus()
     {
         Ase ohjus = new Ase(30, 10);
-        ohjus.aikaJolloinVoiLuoda = 240;
+        ohjus.aikaJolloinVoiLuoda = THERMINATOR_AIKA;
         ohjus.Ammo.Value = 1;
         ohjus.Ammo.MaxValue = 1;
         ohjus.IsVisible = false;
@@ -397,7 +413,9 @@ public static class Aseet
         ohjus.TracerBrightness = 3.0;
         ohjus.TracerLength = 0.5;
         ohjus.IsHoming = true;
-        ohjus.ProjectileCollision = MW2_My_Warfare_2_.Peli.SingonAmmusRajahtaa;
+        ohjus.ProjectileCollision = delegate(PhysicsObject ammus, PhysicsObject kohde) { MW2_My_Warfare_2_.Peli.SingonAmmusRajahtaa(ammus, kohde, ohjus); };
+        ohjus.IsIncendiary = true;
+        ohjus.IgnitionChance = 20;
         return ohjus;
     }
 
@@ -440,7 +458,7 @@ public static class Aseet
     {
         Ase vintorez = new Ase(30, 10);
         vintorez.IsVisible = false;
-        vintorez.aikaJolloinVoiLuoda = 120;//15
+        vintorez.aikaJolloinVoiLuoda = VINTOREZ_AIKA;
         vintorez.FireRate = 15;
         vintorez.TuhovoimaTuhoutuviaVastaan = 2;
         vintorez.TuhovoimaElaviaVastaan = 6;
@@ -459,6 +477,7 @@ public static class Aseet
         vintorez.Pelaajan2AseKuva = pelaaja2vintorezKuva;
         vintorez.UsesTracers = true;
         vintorez.TracerLength = 0.3;
+        vintorez.AseenLapaisy = 0.01;
         return vintorez;
     }
 
@@ -469,14 +488,14 @@ public static class Aseet
     public static Ase LuoAutomaattiHaulikko()
     {
         Ase automaattihaulikko = new Ase(30, 10);
-        automaattihaulikko.Ammo.MaxValue = 20;
+        automaattihaulikko.Ammo.MaxValue = 8;
         automaattihaulikko.Power.Value = 450; //350
         automaattihaulikko.Power.DefaultValue = 450;
         automaattihaulikko.AseenHajoama = new Vector(-60.0, 60.0); //60
         automaattihaulikko.MaxAmmoLifetime = TimeSpan.FromSeconds(0.45);
         automaattihaulikko.TuhovoimaElaviaVastaan = 1;
         automaattihaulikko.TuhovoimaTuhoutuviaVastaan = 1;
-        automaattihaulikko.LataukseenKuluvaAika = 2.5;
+        automaattihaulikko.LataukseenKuluvaAika = 1.5; // 2.5
         automaattihaulikko.MaxAmmo = new IntMeter(60);
         automaattihaulikko.MaxAmmo.MaxValue = 60;
         automaattihaulikko.hylsynKuva = haulikonHylsyKuva;
@@ -486,7 +505,7 @@ public static class Aseet
         automaattihaulikko.Tag = "automaattihaulikko";
         automaattihaulikko.AseenNimi = "AA-12";
         automaattihaulikko.AttackSound = haulikkoAani;
-        automaattihaulikko.aikaJolloinVoiLuoda = 150;
+        automaattihaulikko.aikaJolloinVoiLuoda = SARJAHAULIKKO_AIKA;
         automaattihaulikko.Pelaajan1AseKuva = pelaaja1sarjahaulikkoKuva;
         automaattihaulikko.Pelaajan2AseKuva = pelaaja2sarjahaulikkoKuva;
         automaattihaulikko.TuleekoHylsya = false;
@@ -496,7 +515,7 @@ public static class Aseet
     public static Ase LuoSMG()
     {
         Ase smg = new Ase(30, 10);
-        smg.aikaJolloinVoiLuoda = 60;
+        smg.aikaJolloinVoiLuoda = SMG_AIKA;
         smg.Ammo.Value = 71;
         smg.Ammo.MaxValue = 71;
         smg.IsVisible = false;
@@ -522,7 +541,7 @@ public static class Aseet
     public static Ase LuoFlareGun()
     {
         Ase flaregun = new Ase(30, 10);
-        flaregun.aikaJolloinVoiLuoda = 60;
+        flaregun.aikaJolloinVoiLuoda = FLAREGUN_AIKA;
         flaregun.Ammo.Value = 1;
         flaregun.Ammo.MaxValue = 1;
         flaregun.IsVisible = false;

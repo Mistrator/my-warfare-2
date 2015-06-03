@@ -198,13 +198,26 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 }
             }
         }
-
-        List<GameObject> fysiikkaolioita = GetObjects(x => x is PhysicsObject && !((PhysicsObject)x).IgnoresPhysicsLogics);
-        fysLaskuri.Text = fysiikkaolioita.Count.ToString();
     }
 
-    Label fysLaskuri = new Label();
+    protected override void Paint(Canvas canvas)
+    {
+        if (CurrentGameMode == Gamemode.SurvivalSingle || CurrentGameMode == Gamemode.SurvivalMulti)
+        {
+            canvas.BrushColor = Color.Darker(Color.Red, 192);
+            Vector vasenYla = new Vector(Vakiot.PELAAJAN_PIENIN_SALLITTU_X_KENTALLA, Vakiot.PELAAJAN_SUURIN_SALLITTU_Y_KENTALLA);
+            Vector vasenAla = new Vector(Vakiot.PELAAJAN_PIENIN_SALLITTU_X_KENTALLA, Vakiot.PELAAJAN_PIENIN_SALLITTU_Y_KENTALLA);
+            Vector oikeaYla = new Vector(Vakiot.PELAAJAN_SUURIN_SALLITTU_X_KENTALLA, Vakiot.PELAAJAN_SUURIN_SALLITTU_Y_KENTALLA);
+            Vector oikeaAla = new Vector(Vakiot.PELAAJAN_SUURIN_SALLITTU_X_KENTALLA, Vakiot.PELAAJAN_PIENIN_SALLITTU_Y_KENTALLA);
 
+            canvas.DrawLine(vasenYla, oikeaYla);
+            canvas.DrawLine(oikeaYla, oikeaAla);
+            canvas.DrawLine(oikeaAla, vasenAla);
+            canvas.DrawLine(vasenAla, vasenYla);
+        }
+
+        base.Paint(canvas);
+    }
 
     /// <summary>
     /// Tehdään vahinkoa kohteelle.
@@ -2163,51 +2176,6 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         return RandomGen.SelectOne<Vector>(vaihtoehdot); // palautetaan yksi neljästä
     }
 
-    /// <summary>
-    /// Asetetaan Infiniten fixed-spawnit normimäppiä varten.
-    /// </summary>
-    /// <param name="peli"></param>
-    void AsetaFixedSpawnitInfiniteen(Infinite peli)
-    {
-        peli.VihollistenFixedSpawnit.Add(new Vector(0, -900));
-        peli.VihollistenFixedSpawnit.Add(new Vector(960, -270));
-        peli.VihollistenFixedSpawnit.Add(new Vector(-960, -270));
-        peli.VihollistenFixedSpawnit.Add(new Vector(0, 1640));
-        peli.VihollistenFixedSpawnit.Add(new Vector(1300, 920));
-        peli.VihollistenFixedSpawnit.Add(new Vector(-1300, 920));
-    }
-
-    /// <summary>
-    /// Päivitetään vihollisen aivojen kohde.
-    /// </summary>
-    /// <param name="vihu"></param>
-    void PaivitaVihollisenKohde(Vihollinen vihu)
-    {
-        /*if (vihu.Kohteet.Length == 0) return;
-
-        bool nakeekoKetaan = false;
-        Pelaaja[] ketaNakee = new Pelaaja[vihu.Kohteet.Length];
-        for (int i = 0; i < vihu.Kohteet.Length; i++)
-        {
-            if (vihu.SeesObject(vihu.Kohteet[i]))
-            {
-                nakeekoKetaan = true;
-                ketaNakee[i] = vihu.Kohteet[i];
-            }
-        }
-
-        if (!nakeekoKetaan) // ei nähdä ketään, harhaillaan lähimmän pelaajan ympärillä
-        {
-            vihu.Brain = vihu.ReittiAivot;
-        }
-
-        else
-        {
-            // nähdään kohde ja hyökätään
-            vihu.Brain = vihu.HyokkaysAivot;
-        }*/
-    }
-
     #endregion
 
     #region survival
@@ -3175,10 +3143,8 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         Keyboard.Listen(Key.RightShift, ButtonState.Pressed, delegate { ReitinTallennus.TallennaPaikka(pelaajat[0].Position); }, null); // tallentaa pelaajan 1 paikan vektorina tekstitiedostoon
         Keyboard.Listen(Key.End, ButtonState.Pressed, delegate { ReitinTallennus.LopetaTallennus(); }, null);
         Keyboard.Listen(Key.P, ButtonState.Pressed, delegate { MessageDisplay.Add(OnkoNaytonAlueella(new Vector(0.0, 0.0)).ToString()); }, null);
-        Keyboard.Listen(Key.NumPad9, ButtonState.Pressed, delegate { Add(fysLaskuri); }, null);
         Keyboard.Listen(Key.O, ButtonState.Pressed, LuoHelikopteri, null, pelaajat[0].tahtain.Position);
         Keyboard.Listen(Key.U, ButtonState.Pressed, delegate { AikaKentanAlusta.SecondCounter.Value = 1000; MessageDisplay.Add("[TESTI] Kaikki aseet avattu!"); }, null); // avataan kaikki aseet saataville laatikoista
-
 #endif
 
         // Pelaajan 2 ohjaimet
@@ -3263,7 +3229,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// </summary>
     /// <param name="ammus">Ammus, joka osuu.</param>
     /// <param name="kohde">Kohde, johon osutaan.</param>
-    public void SingonAmmusRajahtaa(PhysicsObject ammus, PhysicsObject kohde)
+    public void SingonAmmusRajahtaa(PhysicsObject ammus, PhysicsObject kohde, Ase ase)
     {
         Explosion sinkopaineaalto = new Explosion(200);
         sinkopaineaalto.Position = ammus.Position;
@@ -3272,7 +3238,15 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         sinkopaineaalto.Force = 400; // 400
         sinkopaineaalto.Speed = 1000;
         sinkopaineaalto.ShockwaveColor = Color.Black;
-        sinkopaineaalto.ShockwaveReachesObject += delegate(IPhysicsObject paineaallonKohde, Vector shokki) { RajahdysOsuu(paineaallonKohde, shokki, ammus.Position, Aseet.SINGON_MAKSIMI_DAMAGE); };
+        sinkopaineaalto.ShockwaveReachesObject += delegate(IPhysicsObject paineaallonKohde, Vector shokki) 
+        { 
+            RajahdysOsuu(paineaallonKohde, shokki, ammus.Position, Aseet.SINGON_MAKSIMI_DAMAGE);
+            /*if (ase.IsIncendiary)
+            {
+                if (RandomGen.NextInt(0, 100) < ase.IgnitionChance)
+                    kohde.Ignite();
+            }*/
+        };
 
         Add(sinkopaineaalto);
         Aseet.singonAani.Play();

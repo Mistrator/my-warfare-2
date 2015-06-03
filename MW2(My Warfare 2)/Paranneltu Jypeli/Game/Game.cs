@@ -1357,7 +1357,7 @@ namespace Jypeli
             if ( Level.Background.Image != null && !Level.Background.MovesWithCamera )
             {
                 SpriteBatch spriteBatch = Jypeli.Graphics.SpriteBatch;
-                spriteBatch.Begin( SpriteSortMode.Deferred, BlendState.AlphaBlend ); // AlphaBlend
+                spriteBatch.Begin( SpriteSortMode.Deferred, BlendState.AlphaBlend); // AlphaBlend
                 spriteBatch.Draw( Level.Background.Image.XNATexture, new XnaRectangle( 0, 0, (int)screen.Width, (int)screen.Height ), XnaColor.White );
                 spriteBatch.End();
             }
