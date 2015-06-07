@@ -50,10 +50,10 @@ namespace Jypeli
             if (!CanBurn) return;
             if (BurningHP.Value <= 0) return;
 
-            OnFire = true;
-
             if (Ignited != null)
                 Ignited(this);
+
+            OnFire = true;
         }
 
         /// <summary>

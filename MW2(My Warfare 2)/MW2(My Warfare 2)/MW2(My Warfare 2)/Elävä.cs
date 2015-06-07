@@ -33,19 +33,33 @@ public abstract class Elava : PhysicsObject
 
         Ignited += delegate(PhysicsObject p)
         {
+            if (OnFire) return;
             Flame f = Partikkelit.CreateFlames(this.Position, 100, 0.3);
+            this.Destroyed += delegate { Ext(f); };
+#if DEBUG
+            MW2_My_Warfare_2_.Peli.MessageDisplay.Add("[DEBUG] Added fire " + f.GetHashCode().ToString());
+#endif
             NeedsUpdateCall = true;
             Updated += delegate { if (f != null) f.Position = this.Position; };
             Extinguished += delegate(PhysicsObject p2)
             {
-                f.FadeOut(2);
-                Timer.SingleShot(2, delegate {
-                    f.Destroy();
-                    NeedsUpdateCall = false;
-                    ResetFireSystem();
-                });
+                Ext(f);
             };
             BurnUpdate += delegate { MW2_My_Warfare_2_.Peli.Damagea(this, Vakiot.TULEN_DAMAGE_ELAVIA_VASTAAN, false); };
         };
+    }
+
+    private void Ext(Flame f)
+    {
+        f.FadeOut(2);
+        Timer.SingleShot(2, delegate
+        {
+            f.Destroy();
+#if DEBUG
+            MW2_My_Warfare_2_.Peli.MessageDisplay.Add("[DEBUG] Removed fire " + f.GetHashCode().ToString());
+#endif
+            NeedsUpdateCall = false;
+            ResetFireSystem();
+        });
     }
 }

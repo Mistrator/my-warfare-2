@@ -14,7 +14,7 @@ using Jypeli.Widgets;
 using My_Warfare_2_Server;
 
 /// @author Miska Kananen
-/// @version 27.2.2014
+/// @version 7.6.2015
 ///
 /// <summary>
 /// My Warfare 2:n pääluokka. Peli toimii tämän luokan sisällä.
@@ -474,7 +474,8 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                     Vector.DotProduct(Wind.Normalize(), (burnableObjs[i].Position - burnableObjs[spreader].Position).Normalize())
                 }
                 else*/
-                burnableObjs[i].IgnitionHP.Value--;
+                if (!burnableObjs[i].OnFire)
+                    burnableObjs[i].IgnitionHP.Value--;
             }
         }
     }
@@ -561,7 +562,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// </summary>
     /// <param name="kenttaTyyppi">Kentän luomistapa. 0: kenttä kuvasta, 1: satunnaisgeneroitu kenttä, 2: tyhjä kenttä.</param>
     /// <param name="pelaajienMaara">Montako pelaajaa peliin tulee.</param>
-    void LuoKentta(int kenttaTyyppi, int pelaajienMaara, bool onkoInfinite)
+    void LuoKentta(KenttaTyyppi kenttaTyyppi, int pelaajienMaara, bool onkoInfinite, Image ruutukartta = null)
     {
         Mouse.IsCursorVisible = false;
         bool onkoSandbox = false;
@@ -585,53 +586,15 @@ public class MW2_My_Warfare_2_ : PhysicsGame
 
         switch (kenttaTyyppi)
         {
-            case 0:
-                ColorTileMap ruudut = ColorTileMap.FromLevelAsset(ValittuKenttaTiedosto);
-                KentanOsat = new Kentta(ruudut.ColumnCount, ruudut.RowCount, "valekivi");
-
-                ruudut.SetTileMethod(Color.Black, LuoKentanOsa, piikkilankaKuva, Vakiot.PIIKKILANKA_TAG, 5);
-                ruudut.SetTileMethod(Color.Gray, LuoTuhoutuvaKentanOsa, kivenKuva, "kivi", 20, 1.0, 1.0);
-                ruudut.SetTileMethod(Color.DarkRed, LuoLapiMentavaKentanOsa, kivenKuva, "valekivi", 1.0, 1.0, 1, false);
-                ruudut.SetTileMethod(Color.Orange, LuoTuhoutuvaKentanOsa, pystypuunKuva, "puu", 10, 0.3, 1.0);
-                ruudut.SetTileMethod(Color.Red, LuoKentanOsa, pystypiikkilankaKuva, Vakiot.PIIKKILANKA_TAG, 5);
-                ruudut.SetTileMethod(Color.Brown, LuoTuhoutuvaKentanOsa, vaakapuunKuva, "puu", 10, 1.0, 0.3);
-                //ruudut.SetTileMethod(Color.ForestGreen, LuoLapiMentavaKentanOsa, naamioverkonKuva, "naamioverkko", 1);
-                ruudut.SetTileMethod(Color.Purple, LuoLaatikko);
-                ruudut.SetTileMethod(Color.Yellow, LuoLapiMentavaKentanOsa, seinäSoihdunKuva, "seinäsoihtu", 1.0, 1.0, -1, false);
-                ruudut.SetTileMethod(Color.Olive, LuoLapiMentavaKentanOsa, valonKuva, "valo", 6.0, 6.0, 1, false);
-                ruudut.SetTileMethod(Color.Rose, LuoTynnyri);
-                ruudut.SetTileMethod(Color.BloodRed, delegate(Vector p, double w, double h, IntPoint posInLevel)
-                {
-                    if (Infinite.CurrentGame != null)
-                        Infinite.CurrentGame.LisaaFixedSpawni(p);
-                });
-                ruudut.SetTileMethod(Color.BrightGreen, delegate(Vector p, double w, double h, IntPoint posInLevel)
-                {
-                    pelaajan1spawni = p;
-                });
-                ruudut.SetTileMethod(Color.Azure, delegate(Vector p, double w, double h, IntPoint posInLevel)
-                {
-                    pelaajan2spawni = p;
-                });
-                ruudut.SetTileMethod(Color.Gold, delegate(Vector p, double w, double h, IntPoint posInLevel)
-                {
-                    vaihtoehtoisetSpawnit.Add(p);
-                });
-                // ruudut.SetTileMethod(Color.YellowGreen, LuoLapiMentavaKentanOsa, helikopteriLaskeutumisAlusta, "laskeutumisalusta", 1.0, 1.0, -1);
-                ruudut.SetTileMethod(Color.YellowGreen, delegate(Vector p, double w, double h, IntPoint posInLevel)
-                {
-                    LuoLapiMentavaKentanOsa(p, w, h, posInLevel, helikopteriLaskeutumisAlusta, "laskeutumisalusta", 6.0, 6.0, -1, false);
-                    if (Escape.Peli != null)
-                        Escape.Peli.LaskeutumisPaikka = p;
-                });
-                ruudut.SetTileMethod(Color.ForestGreen, LuoLapiMentavaKentanOsa, kuusi, "kuusi", 4.0, 4.0, 1, true);
-                ruudut.SetTileMethod(Color.DarkViolet, delegate(Vector p, double w, double h, IntPoint posInLevel) { Blood.AddNormalBlood(p, 5, 1.5); });
-
-                ruudut.Execute(50, 50);
+            case KenttaTyyppi.Ruutukartta:
+                List<Vector> spawns = LuoTileMapKentta(ruutukartta);
+                pelaajan1spawni = spawns[0];
+                pelaajan2spawni = spawns[1];
+                if (spawns.Count > 2)
+                    vaihtoehtoisetSpawnit.AddRange(spawns.GetRange(2, spawns.Count - 2));
                 LuoPilvet((onkoInfinite && pelaajienMaara == 1));
-
                 break;
-            case 1:
+            case KenttaTyyppi.GameOfLifeGeneroitu:
                 string[] satunnaisKenttäTiedosto = LuoSatunnainenKenttäTiedosto(Vakiot.KENTAN_LEVEYS, Vakiot.KENTAN_KORKEUS);
                 TileMap satunnaisKenttä = TileMap.FromStringArray(satunnaisKenttäTiedosto);
                 satunnaisKenttä.SetTileMethod('1', LuoTuhoutuvaKentanOsa, kivenKuva, "kivi", 20, 1.0, 1.0);
@@ -644,10 +607,10 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 pickupit.Execute(Vakiot.KENTAN_RUUDUN_LEVEYS, Vakiot.KENTAN_RUUDUN_KORKEUS);
                 LuoPilvet(false);
                 break;
-            case 2:
+            case KenttaTyyppi.Sandbox:
                 onkoSandbox = true;
                 break;
-            case 3:
+            case KenttaTyyppi.Survival:
                 onkoInfinite = true;
                 KentanOsat = new Kentta(Vakiot.KENTAN_LEVEYS, Vakiot.KENTAN_KORKEUS, "valekivi");
                 break;
@@ -752,6 +715,67 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     }
 
     /// <summary>
+    /// Luo kentän ColorTileMapilla kuvasta. Jos kuva on null, käytetään ValittuKenttaTiedostoa.
+    /// Palauttaa listan, jossa [0] = pelaajan 1 spawni, [1] = pelaajan 2 spawni, [2->...] = pelaajien vaihtoehtoiset spawnit
+    /// </summary>
+    /// <param name="tilemap"></param>
+    List<Vector> LuoTileMapKentta(Image tilemap)
+    {
+        List<Vector> positions = new List<Vector>();
+        positions.Add(Vector.Zero);
+        positions.Add(Vector.Zero);
+
+        ColorTileMap ruudut;
+        if (tilemap == null)
+            ruudut = ColorTileMap.FromLevelAsset(ValittuKenttaTiedosto);
+        else
+            ruudut = new ColorTileMap(tilemap);
+
+        KentanOsat = new Kentta(ruudut.ColumnCount, ruudut.RowCount, "valekivi");
+
+        ruudut.SetTileMethod(Vakiot.VAAKASUORA_PIIKKILANKA, LuoKentanOsa, piikkilankaKuva, Vakiot.PIIKKILANKA_TAG, 5);
+        ruudut.SetTileMethod(Vakiot.KIVI, LuoTuhoutuvaKentanOsa, kivenKuva, "kivi", 20, 1.0, 1.0);
+        ruudut.SetTileMethod(Vakiot.VALEKIVI, LuoLapiMentavaKentanOsa, kivenKuva, "valekivi", 1.0, 1.0, 1, false);
+        ruudut.SetTileMethod(Vakiot.PYSTYSUORA_PUU, LuoTuhoutuvaKentanOsa, pystypuunKuva, "puu", 10, 0.3, 1.0);
+        ruudut.SetTileMethod(Vakiot.PYSTYSUORA_PIIKKILANKA, LuoKentanOsa, pystypiikkilankaKuva, Vakiot.PIIKKILANKA_TAG, 5);
+        ruudut.SetTileMethod(Vakiot.VAAKASUORA_PUU, LuoTuhoutuvaKentanOsa, vaakapuunKuva, "puu", 10, 1.0, 0.3);
+        //ruudut.SetTileMethod(Color.ForestGreen, LuoLapiMentavaKentanOsa, naamioverkonKuva, "naamioverkko", 1);
+        ruudut.SetTileMethod(Vakiot.ASELAATIKKO, LuoLaatikko);
+        ruudut.SetTileMethod(Color.Yellow, LuoLapiMentavaKentanOsa, seinäSoihdunKuva, "seinäsoihtu", 1.0, 1.0, -1, false);
+        ruudut.SetTileMethod(Color.Olive, LuoLapiMentavaKentanOsa, valonKuva, "valo", 6.0, 6.0, 1, false);
+        ruudut.SetTileMethod(Vakiot.TYNNYRI, LuoTynnyri);
+        ruudut.SetTileMethod(Vakiot.VIHOLLISTEN_FIXED_SPAWN, delegate(Vector p, double w, double h, IntPoint posInLevel)
+        {
+            if (Infinite.CurrentGame != null)
+                Infinite.CurrentGame.LisaaFixedSpawni(p);
+        });
+        ruudut.SetTileMethod(Vakiot.PELAAJAN_1_SPAWNI, delegate(Vector p, double w, double h, IntPoint posInLevel)
+        {
+            positions[0] = p;
+        });
+        ruudut.SetTileMethod(Vakiot.PELAAJAN_2_SPAWNI, delegate(Vector p, double w, double h, IntPoint posInLevel)
+        {
+            positions[1] = p;
+        });
+        ruudut.SetTileMethod(Vakiot.PELAAJIEN_VAIHTOEHTOINEN_SPAWNI, delegate(Vector p, double w, double h, IntPoint posInLevel)
+        {
+            positions.Add(p);
+        });
+        // ruudut.SetTileMethod(Color.YellowGreen, LuoLapiMentavaKentanOsa, helikopteriLaskeutumisAlusta, "laskeutumisalusta", 1.0, 1.0, -1);
+        ruudut.SetTileMethod(Color.YellowGreen, delegate(Vector p, double w, double h, IntPoint posInLevel)
+        {
+            LuoLapiMentavaKentanOsa(p, w, h, posInLevel, helikopteriLaskeutumisAlusta, "laskeutumisalusta", 6.0, 6.0, -1, false);
+            if (Escape.Peli != null)
+                Escape.Peli.LaskeutumisPaikka = p;
+        });
+        ruudut.SetTileMethod(Color.ForestGreen, LuoLapiMentavaKentanOsa, kuusi, "kuusi", 4.0, 4.0, 1, true);
+        ruudut.SetTileMethod(Vakiot.VERILAIKKA, delegate(Vector p, double w, double h, IntPoint posInLevel) { Blood.AddNormalBlood(p, 5, 1.5); });
+
+        ruudut.Execute(Vakiot.KENTAN_RUUDUN_LEVEYS, Vakiot.KENTAN_RUUDUN_KORKEUS);
+        return positions;
+    }
+
+    /// <summary>
     /// Luodaan kenttä onlinepelille.
     /// </summary>
     /// <param name="pelaajat">Pelaajat pelissä.</param>
@@ -788,7 +812,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         SoitaMusiikkia(4); // OrcsCome Special nettipeliin
     }
 
-    #region satunnaisgeneraatio
+    #region GameOfLife-satunnaisgeneraatio
 
     /// <summary>
     /// Luodaan kentälle kerättävä esine. 
@@ -907,7 +931,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             if (keratty.ToString() == "kranaatti")
                 p.KranaattienMaara++;
             if (keratty.ToString() == "kivi")
-                p.SeinienMaara++;
+                p.SeinienMaara += Vakiot.SEINIA_KERRALLA;
         }
     }
 
@@ -1051,6 +1075,23 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         String[] pickupienPaikatStringinä = TaulukkoStringiksi(pickupienPaikat);
         return pickupienPaikatStringinä;
     }
+    #endregion
+
+    #region ruutusatunnaisgeneraatio
+
+    /// <summary>
+    /// Luo satunnaisen ColorTileMap-ruutukentän yhdistelemällä pienempiä ColorTileMap-ruutuja.
+    /// </summary>
+    /// <param name="tiles">Yksittäiset ruudut.</param>
+    /// <returns></returns>
+    Image LuoSatunnainenRuutuKentta(string filename, int startIndex, int endIndex)
+    {
+        Image[] tiles = LoadImages(filename, startIndex, endIndex);
+        InfiniteMapGen generator = new InfiniteMapGen(tiles, Vakiot.TILES_HORIZONTAL, Vakiot.TILES_VERTICAL, Vakiot.EXIT_START_PIXEL, Vakiot.EXIT_END_PIXEL,
+            Vakiot.EXIT_START_PIXEL, Vakiot.EXIT_END_PIXEL, Vakiot.EXIT_START_PIXEL, Vakiot.EXIT_END_PIXEL, Vakiot.EXIT_START_PIXEL, Vakiot.EXIT_END_PIXEL);
+        return generator.GenerateMap();
+    }
+
     #endregion
 
     #region kentän osat
@@ -1632,7 +1673,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             case 2:
                 Level.Background.Image = null;
                 ValittuKenttaTiedosto = "kenttä2"; // turha
-                LuoKentta(2, 2, false);
+                LuoKentta(KenttaTyyppi.Sandbox, 2, false);
                 KaytetaankoRajattuaAluetta = false;
                 ClearControls();
                 AsetaOhjaimet();
@@ -1729,7 +1770,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 ClearControls();
                 SoitaMusiikkia(4); // OrcsCome Special
                 CurrentGameMode = Gamemode.SurvivalSingle;
-                AloitaInfiniteGame(1, 3, monestakoPoikki);
+                AloitaInfiniteGame(1, KenttaTyyppi.Survival, monestakoPoikki);
                 AsetaOhjaimet();
                 AsetaSurvivalOhjaimet();
                 Partikkelit.PoistaValikkoTaustaPartikkelit();
@@ -1741,7 +1782,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 ClearControls();
                 SoitaMusiikkia(4); // OrcsCome Special
                 CurrentGameMode = Gamemode.SurvivalMulti;
-                AloitaInfiniteGame(2, 3, monestakoPoikki);
+                AloitaInfiniteGame(2, KenttaTyyppi.Survival, monestakoPoikki);
                 AsetaOhjaimet();
                 AsetaSurvivalOhjaimet();
                 Partikkelit.PoistaValikkoTaustaPartikkelit();
@@ -1901,7 +1942,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             case 0:
                 Level.Background.Image = null;
                 ValittuKenttaTiedosto = "kenttä2"; // kenttä2
-                LuoKentta(0, 2, false);
+                LuoKentta(KenttaTyyppi.Ruutukartta, 2, false);
                 ClearControls();
                 AsetaOhjaimet();
                 SoitaMusiikkia(1); // DarkLurk deathmatchiin
@@ -1919,7 +1960,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             case 1:
                 Level.Background.Image = null;
                 ValittuKenttaTiedosto = "kenttä2";
-                LuoKentta(1, 2, false);
+                LuoKentta(KenttaTyyppi.GameOfLifeGeneroitu, 2, false);
                 KaytetaankoRajattuaAluetta = true;
                 ClearControls();
                 AsetaOhjaimet();
@@ -1942,9 +1983,12 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     {
         List<Widget> ikkunanKomponentit = new List<Widget>();
         IntMeter monestakoHaviaa = new IntMeter(1, 0, 100);
+        RadioButtonGroup kenttaMenu = new RadioButtonGroup();
+
+
         Level.Background.Image = null;
         MultiSelectWindow infinitevalikko = new MultiSelectWindow("Valitse pelaajien määrä", "Yksinpeli", "Moninpeli", "Takaisin");
-        infinitevalikko.ItemSelected += delegate(int valinta) { PainettiinInfiniteMenunNappia(valinta, monestakoHaviaa.Value, ikkunanKomponentit); };
+        infinitevalikko.ItemSelected += delegate(int valinta) { PainettiinInfiniteMenunNappia(valinta, monestakoHaviaa.Value, ikkunanKomponentit, kenttaMenu.Selected); };
         infinitevalikko.Color = Color.Transparent;
         infinitevalikko.SelectionColor = Color.Green;
         infinitevalikko.BorderColor = Color.Transparent;
@@ -1974,6 +2018,34 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         Add(kuolematJoillaHaviaaNaytto);
         ikkunanKomponentit.Add(kuolematJoillaHaviaaNaytto);
 
+
+        Label kentanvalintaOtsikko = new Label("Kenttä:");
+        kentanvalintaOtsikko.Left = kuolematJoillaHaviaaOtsikko.Left;
+        kentanvalintaOtsikko.Y = kuolematJoillaHaviaaOtsikko.Y - 100;
+        Add(kentanvalintaOtsikko);
+        ikkunanKomponentit.Add(kentanvalintaOtsikko);
+
+        Label klassinenOtsikko = new Label("Klassinen:");
+        klassinenOtsikko.Position = kentanvalintaOtsikko.Position + new Vector(300.0, 0.0);
+        Add(klassinenOtsikko);
+        ikkunanKomponentit.Add(klassinenOtsikko);
+
+        Label randomOtsikko = new Label("Satunnainen:");
+        randomOtsikko.Position = klassinenOtsikko.Position + new Vector(0.0, -50.0);
+        Add(randomOtsikko);
+        ikkunanKomponentit.Add(randomOtsikko);
+
+        OnOffButton classic = new OnOffButton(20, 20, true);
+        classic.Position = klassinenOtsikko.Position + new Vector(100.0, 0.0);
+        Add(classic);
+        kenttaMenu.AddButton(classic);
+
+        OnOffButton random = new OnOffButton(20, 20, false);
+        random.Position = randomOtsikko.Position + new Vector(100.0, 0.0);
+        Add(random);
+        kenttaMenu.AddButton(random);
+
+        ikkunanKomponentit.AddRange(kenttaMenu.buttons);
     }
 
     /// <summary>
@@ -1982,7 +2054,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// <param name="valinta">Mitä painettiin.</param>
     /// <param name="monestakoPoikki">Monestako peli menee poikki.</param>
     /// <param name="poistettavatJutut">Pitä poistetaan, kun nappia painetaan.</param>
-    void PainettiinInfiniteMenunNappia(int valinta, int monestakoPoikki, List<Widget> poistettavatJutut)
+    void PainettiinInfiniteMenunNappia(int valinta, int monestakoPoikki, List<Widget> poistettavatJutut, int valittuKentta)
     {
         foreach (Widget poistettava in poistettavatJutut)
         {
@@ -1997,7 +2069,15 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 ClearControls();
                 SoitaMusiikkia(4); // OrcsCome Special
                 CurrentGameMode = Gamemode.InfiniteSingle;
-                AloitaInfiniteGame(1, 0, monestakoPoikki);
+                switch (valittuKentta)
+                {
+                    case 0:
+                        AloitaInfiniteGame(1, KenttaTyyppi.Ruutukartta, monestakoPoikki);
+                        break;
+                    case 1:
+                        AloitaInfiniteGame(1, KenttaTyyppi.SatunnainenRuutukartta, monestakoPoikki);
+                        break;
+                }
                 AsetaOhjaimet();
                 Partikkelit.PoistaValikkoTaustaPartikkelit();
                 break;
@@ -2008,7 +2088,15 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 ClearControls();
                 SoitaMusiikkia(4); // OrcsCome Special
                 CurrentGameMode = Gamemode.InfiniteMulti;
-                AloitaInfiniteGame(2, 0, monestakoPoikki);
+                switch (valittuKentta)
+                {
+                    case 0:
+                        AloitaInfiniteGame(2, KenttaTyyppi.Ruutukartta, monestakoPoikki);
+                        break;
+                    case 1:
+                        AloitaInfiniteGame(2, KenttaTyyppi.SatunnainenRuutukartta, monestakoPoikki);
+                        break;
+                }
                 AsetaOhjaimet();
                 Partikkelit.PoistaValikkoTaustaPartikkelit();
                 break;
@@ -2064,10 +2152,24 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// <param name="pelaajienMaara">Montako pelaajaa peliin tulee.</param>
     /// <param name="kenttaTyyppi">Millaista kenttää käytetään.</param>
     /// <param name="monestakoRespauksestaPoikki">Monestako respauksesta peli menee poikki.</param>
-    void AloitaInfiniteGame(int pelaajienMaara, int kenttaTyyppi, int monestakoRespauksestaPoikki)
+    void AloitaInfiniteGame(int pelaajienMaara, KenttaTyyppi kenttaTyyppi, int monestakoRespauksestaPoikki)
     {
         Infinite infinite = new Infinite(monestakoRespauksestaPoikki);
-        LuoKentta(kenttaTyyppi, pelaajienMaara, true);
+        if (kenttaTyyppi == KenttaTyyppi.SatunnainenRuutukartta)
+        {
+            LuoKentta(KenttaTyyppi.Ruutukartta, pelaajienMaara, true, LuoSatunnainenRuutuKentta(Vakiot.SATUNNAISRUUTUKENTAN_TIEDOSTONIMI, Vakiot.SATUNNAISRUUTUKENTAN_ALOITUSINDEKSI, Vakiot.SATUNNAISRUUTUKENTAN_LOPETUSINDEKSI));
+            KaytetaankoRajattuaAluetta = true;
+        }
+        if (kenttaTyyppi == KenttaTyyppi.Ruutukartta)
+        {
+            LuoKentta(kenttaTyyppi, pelaajienMaara, true);
+        }
+
+        if (kenttaTyyppi == KenttaTyyppi.Survival)
+        {
+            LuoKentta(kenttaTyyppi, pelaajienMaara, true);
+        }
+        
         LuoVihollistenMallineet(infinite);
         infinite.PeliPaattyi += InfiniteHavio;
         infinite.VihollistenSpawnausAjastin.Timeout += delegate { SpawnaaInfinitenVihollisia(infinite); };
@@ -2076,10 +2178,9 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             p.Kuoli += infinite.PelaajaKuoli;
         }
 
-        if (kenttaTyyppi == 0)
+        if (kenttaTyyppi == KenttaTyyppi.Ruutukartta || kenttaTyyppi == KenttaTyyppi.SatunnainenRuutukartta)
         {
             infinite.KaytetaankoFixedSpawneja = true;
-            //AsetaFixedSpawnitInfiniteen(infinite);
         }
         Level.AmbientLight = 0.0;
         if (CurrentGameMode == Gamemode.InfiniteMulti || CurrentGameMode == Gamemode.InfiniteSingle)
@@ -2143,7 +2244,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                     paikka = RandomGen.SelectOne<Vector>(peli.VihollistenFixedSpawnit);
                     spawnausYrityksia++;
                     if (spawnausYrityksia > peli.VihollistenFixedSpawnit.Count * 6) break; // ettei tule loputonta silmukkaa, jos ei ole spawnauspaikkoja
-                } while (!OnkoNaytonAlueella(paikka));
+                } while (OnkoNaytonAlueella(paikka));
                 vihu.Position = paikka;
                 spawnausYrityksia = 0;
             }

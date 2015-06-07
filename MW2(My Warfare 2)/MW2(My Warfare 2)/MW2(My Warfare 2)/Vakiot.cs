@@ -68,6 +68,37 @@ public abstract class Vakiot
 
     public const double KAMAN_SPAWNAUS_VAUHTI = 2.0;
     public const double KAMAN_MAX_MAARA = 25;
+    public const int SEINIA_KERRALLA = 5;
+
+    #endregion
+
+    #region Kenttä
+    public static readonly Color TYHJA = Color.White;
+
+    public static readonly Color VAAKASUORA_PIIKKILANKA = Color.Black;
+    public static readonly Color PYSTYSUORA_PIIKKILANKA = Color.Red;
+    public static readonly Color KIVI = Color.Gray;
+    public static readonly Color VALEKIVI = Color.DarkRed;
+    public static readonly Color VAAKASUORA_PUU = Color.Brown;
+    public static readonly Color PYSTYSUORA_PUU = Color.Orange;
+    public static readonly Color ASELAATIKKO = Color.Purple;
+    public static readonly Color TYNNYRI = Color.Rose;
+
+    public static readonly Color VIHOLLISTEN_FIXED_SPAWN = Color.BloodRed;
+    public static readonly Color PELAAJAN_1_SPAWNI = Color.BrightGreen;
+    public static readonly Color PELAAJAN_2_SPAWNI = Color.Azure;
+    public static readonly Color PELAAJIEN_VAIHTOEHTOINEN_SPAWNI = Color.Gold;
+
+    public static readonly Color VERILAIKKA = Color.DarkViolet;
+
+    public const int TILES_HORIZONTAL = 4;
+    public const int TILES_VERTICAL = 4;
+    public const int EXIT_START_PIXEL = 5;
+    public const int EXIT_END_PIXEL = 6;
+
+    public const string SATUNNAISRUUTUKENTAN_TIEDOSTONIMI = "randommap\\randommap";
+    public const int SATUNNAISRUUTUKENTAN_ALOITUSINDEKSI = 1;
+    public const int SATUNNAISRUUTUKENTAN_LOPETUSINDEKSI = 9 + 1; // 3 + 1
 
     #endregion
 }

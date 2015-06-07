@@ -120,7 +120,7 @@ public class OnOffButton : PushButton
         this.Color = this.ColorWhileOff;
     }
 
-    private void Pressed()
+    public void Pressed()
     {
         this.IsPressed = !IsPressed;
         if (this.IsPressed)
