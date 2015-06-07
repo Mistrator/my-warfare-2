@@ -2244,7 +2244,17 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                     paikka = RandomGen.SelectOne<Vector>(peli.VihollistenFixedSpawnit);
                     spawnausYrityksia++;
                     if (spawnausYrityksia > peli.VihollistenFixedSpawnit.Count * 6) break; // ettei tule loputonta silmukkaa, jos ei ole spawnauspaikkoja
-                } while (OnkoNaytonAlueella(paikka));
+                    if (OnkoLiianLahellaPelaajia(paikka)) continue; // ettei spawnaa pelaajan päälle
+
+                    if (!OnkoNaytonAlueella(paikka))
+                    {
+                        if (RandomGen.NextDouble(0.0, 100.0) <= Vakiot.TODENNAKOISYYS_SPAWNATA_RUUDUN_ULKOPUOLELLE) // näytön ulkopuolella kelpaa tietyllä todennäköisyydellä
+                        {
+                            break;
+                        }
+                    }
+                    else break; // näytöllä kelpaa aina
+                } while (true);
                 vihu.Position = paikka;
                 spawnausYrityksia = 0;
             }
@@ -2252,6 +2262,20 @@ public class MW2_My_Warfare_2_ : PhysicsGame
 
             peli.VihollisetKentalla.Add(vihu);
         }
+    }
+
+    bool OnkoLiianLahellaPelaajia(Vector paikka)
+    {
+        for (int i = 0; i < pelaajat.Length; i++)
+        {
+            if (pelaajat[i] != null && pelaajat[i].IsAddedToGame)
+            {
+                if (Vector.Distance(pelaajat[i].Position, paikka) < Vakiot.MINIMIETAISYYS_PELAAJIIN_SPAWNATESSA)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

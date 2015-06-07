@@ -54,6 +54,8 @@ public abstract class Vakiot
     public const int VIHOLLISTEN_OLETUS_MAX_MAARA_SPAWNAUSKIERROSTA_KOHTI = 3; // 3
     public const double PALJONKO_VIHOLLISET_SPAWNAAVAT_KENTAN_RAJOJEN_ULKOPUOLELLE = 100.0;
     public const int VIHOLLISTEN_MAX_MAARA_PELISSA = 30; // 30
+    public const double TODENNAKOISYYS_SPAWNATA_RUUDUN_ULKOPUOLELLE = 33.0;
+    public const double MINIMIETAISYYS_PELAAJIIN_SPAWNATESSA = 150.0;
 
     public const double AI_REFRESH_RATE = 1.0;
     public const double DISTANCE_TO_REFRESH_ROUTE = 750.0; // jos pelaaja tätä kauempana dijkstra-reitin päästä, lasketaan uusi reitti
