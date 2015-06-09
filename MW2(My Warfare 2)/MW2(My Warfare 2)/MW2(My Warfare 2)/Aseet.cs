@@ -106,7 +106,7 @@ public static class Aseet
         pistooli.Power.DefaultValue = 550; // 400
         pistooli.Power.Value = 550;
         
-        pistooli.TuhovoimaElaviaVastaan = 1.5; //2.5
+        pistooli.TuhovoimaElaviaVastaan = 1.75; // 1.5
         pistooli.TuhovoimaTuhoutuviaVastaan = 0.5; //0.25
 
         pistooli.LataukseenKuluvaAika = 1.0;

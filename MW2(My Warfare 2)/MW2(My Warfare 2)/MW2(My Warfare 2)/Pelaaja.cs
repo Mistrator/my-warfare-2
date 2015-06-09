@@ -65,6 +65,7 @@ public class Pelaaja : Elava
     public PhysicsObject tahtain;
     public GameObject Lasertahtain;
     public GameObject Taskulamppu;
+    public Elava tahtayksenKohde;
 
     public ProgressBar elamaPalkki;
     public ProgressBar kuntoPalkki;
@@ -88,6 +89,8 @@ public class Pelaaja : Elava
     /// Näyttö, joka näyttää pelaajan tappojen määrän.
     /// </summary>
     public Label TappojenMaaraNaytto { get; set; }
+
+    public Timer AsenaytonPiilotusAjastin;
 
     public bool IsShooting { get; set; }
 
@@ -188,6 +191,7 @@ public class Pelaaja : Elava
         Vasymys.AddTrigger(25, TriggerDirection.Down, delegate() { this.VoikoJuosta = false; this.Nopeus = 300.0; });
         Vasymys.AddTrigger(10, TriggerDirection.Down, delegate() { this.Nopeus = 50.0; this.VoikoKavella = false; });
         Vasymys.AddTrigger(15, TriggerDirection.Up, delegate() { this.Nopeus = 300.0; this.VoikoKavella = true; });
+        Vasymys.LowerLimit += delegate { this.tahtayksenKohde = null; };
 
         VasymysAjastin = new Timer();
         VasymysAjastin.Interval = 0.1;
@@ -201,19 +205,43 @@ public class Pelaaja : Elava
         elamaPalkki.BorderColor = Color.White;
         elamaPalkki.BindTo(this.Elamat);
         elamaPalkki.Tag = "HUD";
-        Game.Add(elamaPalkki, 0);
+        Game.Add(elamaPalkki, 1);
 
         kuntoPalkki = new ProgressBar(75, 5);
         kuntoPalkki.BorderColor = Color.White;
         kuntoPalkki.BarColor = Color.Lighter(Color.Blue, 40);
         kuntoPalkki.BindTo(this.Vasymys);
         kuntoPalkki.Tag = "HUD";
-        Game.Add(kuntoPalkki, 0);
+        Game.Add(kuntoPalkki, 1);
+
+        ValittuAseNaytto = new Label();
+        ValittuAseNaytto.TextColor = Vakiot.HUD_COLOR;
+        ValittuAseNaytto.BorderColor = Color.Transparent;
+        ValittuAseNaytto.Tag = "HUD";
+        ValittuAseNaytto.TextScale = new Vector(0.85, 0.85);
+        Game.Add(ValittuAseNaytto, 1);
 
         infoRuutu = new Label();
         infoRuutu.BorderColor = Color.Transparent;
         infoRuutu.TextColor = Color.White;
-        Game.Add(infoRuutu, 0);
+        infoRuutu.Tag = "HUD";
+        Game.Add(infoRuutu, 1);
+
+        ammusMaaraNaytto = new Label();
+        ammusMaaraNaytto.TextColor = Vakiot.HUD_COLOR;
+        ammusMaaraNaytto.BorderColor = Color.Transparent;
+        ammusMaaraNaytto.Tag = "HUD";
+        ammusMaaraNaytto.TextScale = new Vector(0.70, 0.70);
+        Game.Add(ammusMaaraNaytto, 1);
+
+        AsenaytonPiilotusAjastin = new Timer();
+        AsenaytonPiilotusAjastin.Interval = Vakiot.WEAPON_NAME_VISIBLE_SECONDS;
+        AsenaytonPiilotusAjastin.Times.Value = 1;
+        AsenaytonPiilotusAjastin.TimesLimited = true;
+        AsenaytonPiilotusAjastin.Timeout += delegate
+        {
+            this.ValittuAseNaytto.IsVisible = false;
+        };
 
         elamanPalautin = new Timer();
         elamanPalautin.Interval = Vakiot.PELAAJAN_ELAMIEN_REGENEROITUMISVAUHTI;
@@ -319,14 +347,18 @@ public class Pelaaja : Elava
                 MW2_My_Warfare_2_.Peli.KirkastaRuutua(0.03, 1.0);
         }
 
+        int vAse = this.aseet.IndexOf(this.ValittuAse);
         // ladataan aseet respauksessa
         for (int j = 0; j < this.Aseet.Count; j++)
         {
             this.ValitseAse(j);
             MW2_My_Warfare_2_.Peli.Lataa(this, false);
         }
+        if (this.Aseet[vAse].Ammo.Value != 0)
+            this.ValitseAse(vAse);
+        else
+            this.ValitseAse(0);
 
-        this.ValitseAse(0);
         MW2_My_Warfare_2_.Peli.PaivitaPelaajanKuvaJaHUD(this);
     }
 

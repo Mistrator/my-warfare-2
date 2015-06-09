@@ -23,6 +23,9 @@ public abstract class Vakiot
     public const double PELAAJAN_KUNNON_PALAUTUMIS_NOPEUS = 1;
     public const double PELAAJAN_PYORIMIS_NOPEUS_OHJAIMELLA = 2.0;
     public const double OHJAIMEN_DEAD_ZONE_ASTEINA = 2.0;
+    public static readonly Angle AIMLOCK_MAX_ANGLE = Angle.FromDegrees(6.5);
+    public const double PELAAJAN_VASYMISNOPEUS_TAHDATESSA = 1.0;
+
 
     //public static readonly Vector[] PELAAJIEN_VAIHTOEHTOISET_SPAWNAUSPAIKAT = { new Vector(0, -600), new Vector(0, 700), new Vector(-1030, 1450), new Vector(1030, 1450) };
           
@@ -44,6 +47,9 @@ public abstract class Vakiot
     public const string PIIKKILANKA_TAG = "piikkilanka"; // pelaajille kiinteä, zombit menevät läpi
     public const double SHATTER_SIZE = 10;
     public static readonly TimeSpan ENEMY_PART_LIFETIME = TimeSpan.FromSeconds(1.0);
+
+    public static readonly Color HUD_COLOR = new Color(255, 255, 255, 32);
+    public const double WEAPON_NAME_VISIBLE_SECONDS = 1.0;
 
     #endregion
 
