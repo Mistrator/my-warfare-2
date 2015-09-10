@@ -48,6 +48,14 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// </summary>
     public static DoubleMeter KauankoPuolustetaan = new DoubleMeter(120.0);
 
+    private static readonly Func<Ase>[] aseidenLuontimetodit = 
+    { 
+        Aseet.LuoRynkky, Aseet.LuoHaulikko, Aseet.LuoMinigun, 
+        Aseet.LuoSnipa, Aseet.LuoSinko, Aseet.LuoMagnum, 
+        Aseet.LuoVintorez, Aseet.LuoSMG, Aseet.LuoAutomaattiHaulikko, 
+        Aseet.LuoFlareGun, Aseet.LuoOhjus 
+    };
+
     static readonly SoundEffect aseTyhjäAani = LoadSoundEffect("dry-fire-gun");
     static readonly SoundEffect aseLatausAani = LoadSoundEffect("Pump Shotgun");
     static readonly SoundEffect lippaanPoistoAani = LoadSoundEffect("clip-remove");
@@ -532,7 +540,10 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// <param name="lifetimeInSeconds">Kauanko valojuova pysyy kentällä.</param>
     void DrawTracers(Vector position, Color color, double lifetimeInSeconds, double brightnessFactor)
     {
-        color.AlphaComponent = (byte)(32 * brightnessFactor); // 64 toimii
+        if (brightnessFactor > byte.MaxValue)
+            color.AlphaComponent = byte.MaxValue;
+        else
+            color.AlphaComponent = (byte)(brightnessFactor); 
         GameObject tracer = new GameObject(2, 2);
         tracer.Shape = Shape.Circle;
         tracer.Color = color;
@@ -550,8 +561,11 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// <param name="brightnessFactor">Valojuovan kirkkaus.</param>
     void DrawTracers(PhysicsObject tracingObject, Color color, double lifetimeInSeconds, double brightnessFactor)
     {
-        color.AlphaComponent = (byte)(32 * brightnessFactor); // 64 toimii
-        GameObject tracer = new GameObject(60, 2);
+        if (brightnessFactor > byte.MaxValue)
+            color.AlphaComponent = byte.MaxValue;
+        else
+            color.AlphaComponent = (byte)(brightnessFactor);
+        GameObject tracer = new GameObject((1.0 / 60.0) * 1.5 * tracingObject.Velocity.Magnitude, 2);
         tracer.Shape = Shape.Circle;
         tracer.Color = color;
         tracer.Position = tracingObject.Position;
@@ -651,17 +665,23 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         if (!onkoInfinite)
         {
             pelaajat[0].Voitti += Voitto;
-            pelaajat[0].Kuoli += delegate { pelaajat[1].Tapot.Value++; };
+            pelaajat[0].Kuoli += delegate 
+            { 
+                pelaajat[1].Tapot.Value++;
+                if (MonestakoVoittaa.MaxValue == Int32.MaxValue)
+                    pelaajat[1].NaytaViesti("Tappoja " + pelaajat[1].Tapot.Value, 1.0);
+                else
+                    pelaajat[1].NaytaViesti("Tappoja " + pelaajat[1].Tapot.Value + "/" + pelaajat[1].Tapot.MaxValue, 1.0);
+            };
             pelaajat[1].Voitti += Voitto;
-            pelaajat[1].Kuoli += delegate { pelaajat[0].Tapot.Value++; };
-
-            pelaajat[0].TappojenMaaraNaytto.Position = new Vector(Screen.Left + 125, Screen.Top - 75);
-            pelaajat[1].TappojenMaaraNaytto.Position = new Vector(Screen.Right - 125, Screen.Top - 75);
-        }
-        else
-        {
-            pelaajat[0].TappojenMaaraNaytto.IsVisible = false;
-            pelaajat[1].TappojenMaaraNaytto.IsVisible = false;
+            pelaajat[1].Kuoli += delegate 
+            { 
+                pelaajat[0].Tapot.Value++;
+                if (MonestakoVoittaa.MaxValue == Int32.MaxValue)
+                    pelaajat[0].NaytaViesti("Tappoja " + pelaajat[0].Tapot.Value, 1.0);
+                else
+                    pelaajat[0].NaytaViesti("Tappoja " + pelaajat[0].Tapot.Value + "/" + pelaajat[0].Tapot.MaxValue, 1.0);
+            };
         }
 
         if (pelaajienMaara == 2)
@@ -675,16 +695,12 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             Camera.Follow(pelaajat[0]);
             pelaajat[1].elamaPalkki.IsVisible = false;
             pelaajat[1].ValittuAseNaytto.IsVisible = false;
-            pelaajat[1].TappojenMaaraNaytto.IsVisible = false;
             pelaajat[1].kuntoPalkki.IsVisible = false;
             pelaajat[1].ammusMaaraNaytto.IsVisible = false;
         }
 
         if (onkoSandbox) // laitetaan kaikki aseet, loputtomat ammukset ja loputtomat kranaatit
         {
-            pelaajat[0].TappojenMaaraNaytto.IsVisible = false;
-            pelaajat[1].TappojenMaaraNaytto.IsVisible = false;
-
             for (int i = 0; i < pelaajat.Length; i++)
             {
                 pelaajat[i].LisaaAse(Aseet.LuoRynkky());
@@ -717,6 +733,12 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                 pelaajat[i].ammusMaaraNaytto.IsVisible = false;
             }
         }
+
+        if (kenttaTyyppi == KenttaTyyppi.Ruutukartta)
+        {
+            AjastaAseidenAvautumisIlmoitukset();
+        }
+
         #endregion
 
     }
@@ -816,6 +838,22 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         ClearControls();
         AsetaOhjaimet();
         SoitaMusiikkia(4); // OrcsCome Special nettipeliin
+    }
+
+    void AjastaAseidenAvautumisIlmoitukset()
+    {
+        for (int i = 0; i < aseidenLuontimetodit.Length; i++)
+        {
+            Ase ase = aseidenLuontimetodit[i]();
+            AikaKentanAlusta.SecondCounter.AddTrigger(ase.aikaJolloinVoiLuoda, TriggerDirection.Up, delegate() 
+            {
+                foreach (Pelaaja p in pelaajat)
+                {
+                    p.NaytaViesti(ase.AseenNimi + " saatavilla", 1.0);
+                }
+            });
+            //AjastaIlmoitusPelaajille(ase.AseenNimi + " saatavilla", ase.aikaJolloinVoiLuoda);
+        }
     }
 
     #region GameOfLife-satunnaisgeneraatio
@@ -923,21 +961,32 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         if (keratty is Ase)
         {
             Ase a = keratty as Ase;
-            if (!p.OnkoPelaajallaAse(a.Tag.ToString())) p.LisaaAse(a);
+            if (!p.OnkoPelaajallaAse(a.Tag.ToString()))
+            {
+                p.LisaaAse(a);
+                p.NaytaViesti(Vakiot.HUD_SAIT_ASEEN + a.AseenNimi, 1.0);
+            }
             else
             {
                 for (int i = 0; i < p.Aseet.Count; i++)
                 {
                     if (p.Aseet[i].Tag.ToString() == a.Tag.ToString()) p.Aseet[i].MaxAmmo.Value += p.Aseet[i].Ammo.MaxValue; // jos pelaajalla on jo ase, annetaan aseeseen lippaallinen ammuksia
+                    p.NaytaViesti(Vakiot.HUD_SAIT_AMMUKSIA_ASEESEEN + a.AseenNimi, 1.0);
                 }
             }
         }
         if (keratty is String)
         {
             if (keratty.ToString() == "kranaatti")
+            {
                 p.KranaattienMaara++;
+                p.NaytaViesti(Vakiot.HUD_SAIT_KRANAATIN + p.KranaattienMaara.ToString(), 1.0);
+            }
             if (keratty.ToString() == "kivi")
+            {
                 p.SeinienMaara += Vakiot.SEINIA_KERRALLA;
+                p.NaytaViesti("Sait " + Vakiot.SEINIA_KERRALLA.ToString() + " seinää", 1.0);
+            }
         }
     }
 
@@ -1679,6 +1728,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             case 2:
                 Level.Background.Image = null;
                 ValittuKenttaTiedosto = "kenttä2"; // turha
+                MonestakoVoittaa = new IntMeter(Int32.MaxValue);
                 LuoKentta(KenttaTyyppi.Sandbox, 2, false);
                 KaytetaankoRajattuaAluetta = false;
                 ClearControls();
@@ -2484,7 +2534,6 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         pelaaja.LinearDamping = 0.80;
         pelaaja.objektienVari = kamanVari;
         pelaaja.elamaPalkki.BarColor = pelaaja.objektienVari;
-        pelaaja.TappojenMaaraNaytto = LuoTappoNaytto(pelaaja.ValittuAseNaytto.Position);
         pelaaja.kaytetaankoPalloTahtainta = kaytetaankoPalloTahtainta;
         AddCollisionHandler<Pelaaja, Vihollinen>(pelaaja, delegate(Pelaaja p, Vihollinen v) { Damagea(pelaaja, v.TuhovoimaElaviaKohtaan); });
         PaivitaPelaajanKuvaJaHUD(pelaaja);
@@ -2518,6 +2567,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             sum += d;
 
         pelaaja.Move(sum * pelaaja.Nopeus);
+        pelaaja.tahtain.Move(sum * pelaaja.Nopeus);
     }
 
     /// <summary>
@@ -2529,6 +2579,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     {
         Vector tatinAsento = tatinTila.StateVector;
         pelaaja.Move(tatinAsento * pelaaja.Nopeus);
+        pelaaja.tahtain.Move(tatinAsento * pelaaja.Nopeus);
     }
 
     // Tässä kohdassa (LiikutaTahtainta, LiikutaTahtaintaPadilla) ongelmana samat parametrit, mutta eri sisältö.
@@ -2540,8 +2591,20 @@ public class MW2_My_Warfare_2_ : PhysicsGame
     /// <param name="pelaaja">Pelaaja, jonka tähtäintä liikutetaan.</param>
     void LiikutaTahtainta(AnalogState hiirenTila, Pelaaja pelaaja)
     {
-        pelaaja.tahtain.X = Mouse.PositionOnWorld.X;
-        pelaaja.tahtain.Y = Mouse.PositionOnWorld.Y;
+        double tahtaimenEtaisyys = Vakiot.TAHTAIMEN_MAX_ETAISYYS - 5 * pelaaja.ValittuAse.AseenHajoama.Magnitude;
+
+        if (tahtaimenEtaisyys < Vakiot.TAHTAIMEN_MIN_ETAISYYS)
+            tahtaimenEtaisyys = Vakiot.TAHTAIMEN_MIN_ETAISYYS;
+
+        Vector posRelativeToPlayer = (pelaaja.tahtain.Position + hiirenTila.MouseMovement) - pelaaja.Position;
+
+        if (posRelativeToPlayer.Magnitude > tahtaimenEtaisyys)
+        {
+            posRelativeToPlayer = posRelativeToPlayer.Normalize();
+            posRelativeToPlayer *= tahtaimenEtaisyys;
+        }
+
+        pelaaja.tahtain.AbsolutePosition = pelaaja.Position + posRelativeToPlayer;
     }
 
     /// <summary>
@@ -2644,20 +2707,10 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         tähtäin.IgnoresExplosions = true;
         tähtäin.IgnoresPhysicsLogics = true;
         tähtäin.Body.IsCollidable = false;
-        tähtäin.LinearDamping = 0.60;
+        tähtäin.LinearDamping = 0.80;
         tähtäin.Tag = "tahtain";
         Add(tähtäin, 2);
         return tähtäin;
-    }
-
-    Label LuoTappoNaytto(Vector ylemmanHudinOsanPaikka)
-    {
-        Label tapponaytto = new Label("Tappoja: 0");
-        tapponaytto.TextColor = Color.White;
-        tapponaytto.BorderColor = Color.Transparent;
-        tapponaytto.Position = ylemmanHudinOsanPaikka - new Vector(0.0, 60.0);
-        Add(tapponaytto);
-        return tapponaytto;
     }
 
     #endregion
@@ -2681,6 +2734,8 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         PhysicsObject ammus = pelaaja.ValittuAse.Shoot(overridesIsReady);
         if (ammus == null)
         {
+            if (pelaaja.ValittuAse.Ammo == 0)
+                AloitaLataus(pelaaja);
             return;
         }
 
@@ -2959,6 +3014,22 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         PaivitaPelaajanKuvaJaHUD(pelaaja);
     }
 
+
+    public void AloitaLataus(Pelaaja pelaaja)
+    {
+        if (pelaaja.LadataankoAsetta) return;
+
+        lippaanPoistoAani.Play();
+        pelaaja.LadataankoAsetta = true;
+        if (pelaaja.ValittuAse.LatausAnimaatio1 != null)
+        {
+            pelaaja.Animation = new Animation(pelaaja.ValittuAse.LatausAnimaatio1);
+            pelaaja.Animation.Start(1);
+            pelaaja.Animation.FPS = pelaaja.Animation.FrameCount / pelaaja.ValittuAse.LataukseenKuluvaAika;
+        }
+        Timer.SingleShot(pelaaja.ValittuAse.LataukseenKuluvaAika, delegate { Lataa(pelaaja); });
+    }
+
     /// <summary>
     /// Ladataan pelaajan kulloinkin valittuna oleva ase.
     /// </summary>
@@ -3046,6 +3117,12 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         kranaatti.AngularVelocity = RandomGen.NextDouble(-5.0, 5.0);
         kranaatti.AngularDamping = 0.97;
         kranaatti.Image = kranaatinKuva;
+
+        GameObject indicator = new GameObject(1.0, 1.0, Shape.Circle);
+        indicator.Color = new Color(255, 165, 0, 64);
+        indicator.Tag = true;
+        kranaatti.Add(indicator);
+
         kranaatti.Explosion.Image = null;
         kranaatti.Explosion.ShockwaveColor = Color.Black;
         kranaatti.Explosion.IsShockwaveVisible = false;
@@ -3067,10 +3144,29 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         kranaatti.Collided += delegate(IPhysicsObject k, IPhysicsObject kohde) { if (kohde.Tag.ToString() != "pelaaja" && kohde.Tag.ToString() != "tahtain") kranaatti.Velocity = Vector.Zero; };
         kranaatti.IsUpdated = true;
         kranaatti.NeedsUpdateCall = true;
-        kranaatti.Updated += delegate(PhysicsObject p) { DrawTracers(kranaatti.Position, Color.Orange, 0.30, 6); }; // brightness 3
+        kranaatti.Updated += delegate(PhysicsObject p) { 
+            DrawTracers(kranaatti.Position, Color.Orange, 0.30, 255);
+
+            if ((bool)indicator.Tag == true && indicator.Width <= Vakiot.KRANAATTI_INDIKATTORIN_MAX_KOKO)
+            {
+                indicator.Width += Vakiot.KRANAATTI_INDIKAATTORIN_VALKKYMISNOPEUS;
+                indicator.Height += Vakiot.KRANAATTI_INDIKAATTORIN_VALKKYMISNOPEUS;
+                indicator.Tag = (indicator.Width < Vakiot.KRANAATTI_INDIKATTORIN_MAX_KOKO);
+            }
+            if ((bool)indicator.Tag == false && indicator.Width >= Vakiot.KRANAATTI_INDIKATTORIN_MIN_KOKO)
+            {
+                indicator.Width -= Vakiot.KRANAATTI_INDIKAATTORIN_VALKKYMISNOPEUS;
+                indicator.Height -= Vakiot.KRANAATTI_INDIKAATTORIN_VALKKYMISNOPEUS;
+                indicator.Tag = (indicator.Width < Vakiot.KRANAATTI_INDIKATTORIN_MIN_KOKO + Vakiot.KRANAATTI_INDIKAATTORIN_VALKKYMISNOPEUS);
+            }
+
+        }; // brightness 3
         pelaaja.Throw(kranaatti, Angle.FromDegrees(0), KRANAATIN_NOPEUS, 0, 0);
         if (!pelaaja.LoputtomatKranaatit)
+        {
             pelaaja.KranaattienMaara--;
+            pelaaja.NaytaViesti(Vakiot.HUD_KRANAATTEJA_JALJELLA + pelaaja.KranaattienMaara.ToString(), 1.0);
+        }
     }
 
     /// <summary>
@@ -3084,7 +3180,6 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         {
             Pelaaja pelaaja = (kohde as Pelaaja);
             Laatikko laat = (laatikko as Laatikko);
-            Func<Ase>[] aseidenLuontimetodit = { Aseet.LuoRynkky, Aseet.LuoHaulikko, Aseet.LuoMinigun, Aseet.LuoSnipa, Aseet.LuoSinko, Aseet.LuoMagnum, Aseet.LuoVintorez, Aseet.LuoSMG, Aseet.LuoAutomaattiHaulikko, Aseet.LuoFlareGun, Aseet.LuoOhjus };
 
             if (laat.OnkoKäytössä == false)
             {
@@ -3099,7 +3194,8 @@ public class MW2_My_Warfare_2_ : PhysicsGame
                     if (AikaKentanAlusta.SecondCounter.Value > ase.aikaJolloinVoiLuoda)
                     {
                         pelaaja.LisaaAse(ase);
-                        MessageDisplay.Add("Pelaaja " + pelaaja.Numero + " sai aseen: " + ase.AseenNimi);
+                        //MessageDisplay.Add("Pelaaja " + pelaaja.Numero + " sai aseen: " + ase.AseenNimi);
+                        pelaaja.NaytaViesti(Vakiot.HUD_SAIT_ASEEN + ase.AseenNimi, 1.0);
                         return;
                     }
                 }
@@ -3110,9 +3206,12 @@ public class MW2_My_Warfare_2_ : PhysicsGame
             while (satunnainenPelaajanAse.OnkoMeleeAse);
 
             satunnainenPelaajanAse.MaxAmmo.Value = satunnainenPelaajanAse.MaxAmmo.MaxValue;
-            MessageDisplay.Add("Pelaaja " + pelaaja.Numero + " sai ammuksia aseeseen: " + satunnainenPelaajanAse.AseenNimi);
+            //MessageDisplay.Add("Pelaaja " + pelaaja.Numero + " sai ammuksia aseeseen: " + satunnainenPelaajanAse.AseenNimi);
+            pelaaja.NaytaViesti(Vakiot.HUD_SAIT_AMMUKSIA_ASEESEEN + satunnainenPelaajanAse.AseenNimi, 1.0);
+
             pelaaja.KranaattienMaara++;
-            MessageDisplay.Add("Pelaaja " + pelaaja.Numero + " sai kranaatin.");
+            pelaaja.NaytaViesti(Vakiot.HUD_SAIT_KRANAATIN + pelaaja.KranaattienMaara.ToString(), 1.0);
+            //MessageDisplay.Add("Pelaaja " + pelaaja.Numero + " sai kranaatin.");
 
             laatikko.Image = kamaaNäkymätön;
             laatikko.IgnoresCollisionResponse = true;
@@ -3242,15 +3341,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         Keyboard.Listen(Key.D, Jypeli.ButtonState.Down, LiikutaPelaajaa, "", pelaajat[0]);
         Keyboard.Listen(Key.R, Jypeli.ButtonState.Pressed, delegate
         {
-            lippaanPoistoAani.Play();
-            pelaajat[0].LadataankoAsetta = true;
-            if (pelaajat[0].ValittuAse.LatausAnimaatio1 != null)
-            {
-                pelaajat[0].Animation = new Animation(pelaajat[0].ValittuAse.LatausAnimaatio1);
-                pelaajat[0].Animation.Start(1);
-                pelaajat[0].Animation.FPS = pelaajat[0].Animation.FrameCount / pelaajat[0].ValittuAse.LataukseenKuluvaAika;
-            }
-            Timer.SingleShot(pelaajat[0].ValittuAse.LataukseenKuluvaAika, delegate { Lataa(pelaajat[0]); });
+            AloitaLataus(pelaajat[0]);
         }, null);
         Keyboard.Listen(Key.LeftShift, Jypeli.ButtonState.Pressed, delegate { pelaajat[0].Juokse(); }, null);
         Keyboard.Listen(Key.LeftShift, Jypeli.ButtonState.Released, delegate { pelaajat[0].LopetaJuoksu(); }, null);
@@ -3301,14 +3392,7 @@ public class MW2_My_Warfare_2_ : PhysicsGame
         ControllerOne.Listen(Button.RightShoulder, Jypeli.ButtonState.Pressed, delegate { VaihdaAsetta(pelaajat[1], 1); }, null);
         ControllerOne.Listen(Button.X, Jypeli.ButtonState.Pressed, delegate
         {
-            lippaanPoistoAani.Play(); pelaajat[1].LadataankoAsetta = true;
-            if (pelaajat[1].ValittuAse.LatausAnimaatio1 != null)
-            {
-                pelaajat[1].Animation = new Animation(pelaajat[1].ValittuAse.LatausAnimaatio2);
-                pelaajat[1].Animation.Start(1);
-                pelaajat[1].Animation.FPS = pelaajat[1].Animation.FrameCount / pelaajat[1].ValittuAse.LataukseenKuluvaAika;
-            }
-            Timer.SingleShot(pelaajat[1].ValittuAse.LataukseenKuluvaAika, delegate { Lataa(pelaajat[1]); });
+            AloitaLataus(pelaajat[1]);
         }, null);
         ControllerOne.Listen(Button.A, ButtonState.Pressed, HeitaKranaatti, null, pelaajat[1]);
         ControllerOne.Listen(Button.RightStick, ButtonState.Pressed, MeleeIsku, null, pelaajat[1]);

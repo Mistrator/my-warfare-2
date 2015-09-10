@@ -1,0 +1,13 @@
+-luodaan random m‰ppi valmiista palasista
+-palasissa on m‰‰ritellyt kulkuaukot reunoilla samoissa kohdissa
+
+-antaa m‰pin tekstuurina LuoKentt‰‰n()
+
+
+1. Valitse spawnpoint: ruutu jossa pelaajien spawnit
+2. Valitse kartasta satunnainen paikka aloitusruudulle.
+
+3. Katso, mill‰ puolilla ruutua on ulosk‰ynnit. Tutki yksi kerrallaan ulosk‰yntien puoleiset tyhj‰t ruudut.
+   1. Mill‰ puolilla tyhj‰‰ ruutua on ulosk‰ynnit? Aseta ruutu, jossa on vastaavat ulosk‰ynnit. Jos tyhj‰n ruudun        ymp‰rill‰ on tyhji‰ ruutuja, ei v‰li‰ onko ulosk‰ynti‰.
+
+4. Toista sama arvotuille ruuduille.

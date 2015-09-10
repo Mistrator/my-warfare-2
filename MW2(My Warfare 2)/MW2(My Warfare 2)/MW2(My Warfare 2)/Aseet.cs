@@ -125,6 +125,8 @@ public static class Aseet
 
         pistooli.IsVisible = false;
         pistooli.UsesTracers = true;
+
+        pistooli.TracerBrightness = 255;
         return pistooli;
     }
 
@@ -164,6 +166,7 @@ public static class Aseet
 
         rynkky.IsVisible = false;
         rynkky.UsesTracers = true;
+        rynkky.TracerBrightness = 255;
 
         return rynkky;
     }
@@ -195,7 +198,7 @@ public static class Aseet
         minigun.Pelaajan1AseKuva = pelaaja1minigunKuva;
         minigun.Pelaajan2AseKuva = pelaaja2minigunKuva;
         minigun.UsesTracers = true;
-        minigun.TracerBrightness = 2.0;
+        minigun.TracerBrightness = 255;
         minigun.TracerLength = 0.4;
         return minigun;
     }
@@ -226,7 +229,7 @@ public static class Aseet
         snipa.Pelaajan1AseKuva = pelaaja1snipaKuva;
         snipa.Pelaajan2AseKuva = pelaaja2snipaKuva;
         snipa.UsesTracers = true;
-        snipa.TracerBrightness = 3.0;
+        snipa.TracerBrightness = 255;
         snipa.TracerLength = 1.0;
         snipa.AseenLapaisy = 0.1;
         return snipa;
@@ -292,6 +295,7 @@ public static class Aseet
         haulikko.Pelaajan2AseKuva = pelaaja2haulikkoKuva;
         haulikko.TuleekoHylsya = false;
         haulikko.UsesTracers = true;
+        haulikko.TracerBrightness = 255;
         return haulikko;
     }
 
@@ -306,7 +310,7 @@ public static class Aseet
         nyrkki.Power.Value = 450;
         nyrkki.InfiniteAmmo = true;
         nyrkki.Power.DefaultValue = 450;
-        nyrkki.AseenHajoama = new Vector(0.0, 0.0);
+        nyrkki.AseenHajoama = new Vector(60.0, 60.0);
         nyrkki.MaxAmmoLifetime = TimeSpan.FromSeconds(0.035); // 0.035
         nyrkki.TuhovoimaElaviaVastaan = 10;
         nyrkki.TuhovoimaTuhoutuviaVastaan = 10;
@@ -384,7 +388,7 @@ public static class Aseet
         magnum.Pelaajan2AseKuva = pelaaja2magnumKuva;
         magnum.TuleekoHylsya = false;
         magnum.UsesTracers = true;
-        magnum.TracerBrightness = 2.0;
+        magnum.TracerBrightness = 255.0;
         return magnum;
     }
 
@@ -410,7 +414,7 @@ public static class Aseet
         ohjus.Pelaajan2AseKuva = pelaaja2rpgKuva1;
         ohjus.TuleekoHylsya = false;
         ohjus.UsesTracers = true;
-        ohjus.TracerBrightness = 3.0;
+        ohjus.TracerBrightness = 255;
         ohjus.TracerLength = 0.5;
         ohjus.IsHoming = true;
         ohjus.ProjectileCollision = delegate(PhysicsObject ammus, PhysicsObject kohde) { MW2_My_Warfare_2_.Peli.SingonAmmusRajahtaa(ammus, kohde, ohjus); };
@@ -448,7 +452,7 @@ public static class Aseet
         binaryrifle.luodinKuva = binaryAmmusKuva;
 
         binaryrifle.UsesTracers = true;
-        binaryrifle.TracerBrightness = 3.0;
+        binaryrifle.TracerBrightness = 255;
         binaryrifle.TracerLength = 1.0;
         binaryrifle.OverrideTracerColor = Color.OrangeRed;
         return binaryrifle;
@@ -477,6 +481,7 @@ public static class Aseet
         vintorez.Pelaajan2AseKuva = pelaaja2vintorezKuva;
         vintorez.UsesTracers = true;
         vintorez.TracerLength = 0.3;
+        vintorez.TracerBrightness = 255;
         vintorez.AseenLapaisy = 0.01;
         return vintorez;
     }
@@ -535,6 +540,7 @@ public static class Aseet
         smg.Pelaajan1AseKuva = pelaaja1smgKuva;
         smg.Pelaajan2AseKuva = pelaaja2smgKuva;
         smg.UsesTracers = true;
+        smg.TracerBrightness = 255;
         return smg;
     }
 

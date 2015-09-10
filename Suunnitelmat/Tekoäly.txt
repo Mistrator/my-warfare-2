@@ -1,0 +1,25 @@
+﻿spawnatessa joko dijkstra tai followerbrain
+
+dijkstra-reitti päivitetään, jos:
+-siirrytään followerbrainista dijkstraan
+-on päästy reitin päähän
+-pelaajan ja reitin pään etäisyys on liian suuri
+
+nopeutuskeinoja
+-eri säie tekoälylle done
+-ajetaan reitinhaku yhdelle viholliselle kerrallaan peräkkäin, että vältetään lagipiikki done
+
+-navmesh toimii ja päivittyy, mutta on liian iso
+-pienennetty
+
+-ei seuraa reittiä kunnolla
+-kaikki eivät lähde liikkelle
+-jos törmää, lähtee liukumaan
+
+-hakeutuvat 2 pelaajan paikkaan vaikka ei ole lisätty peliin
+-fixed
+
+-1 zombilla kerrallaan toimii täydellisesti
+-kaikki viholliset käyttivät samoja aivoja accidentally
+
+-jono tekoälyn päivityksiin done

@@ -300,13 +300,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="pistol.wav">
-      <Name>pistol</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="sniper.wav">
       <Name>sniper</Name>
       <Importer>WavImporter</Importer>
@@ -1748,6 +1741,13 @@
       <Name>randommap9</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="pistol.wav">
+      <Name>pistol</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />

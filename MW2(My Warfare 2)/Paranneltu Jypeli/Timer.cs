@@ -174,12 +174,13 @@ namespace Jypeli
         /// </summary>
         /// <param name="seconds">Aika sekunteina.</param>
         /// <param name="onTimeout">Kutsuttava aliohjelma.</param>
-        public static void SingleShot( double seconds, Action onTimeout )
+        public static Timer SingleShot( double seconds, Action onTimeout )
         {
             Timer t = new Timer();
             t.Interval = seconds;
             t.Timeout += onTimeout;
             t.Start( 1 );
+            return t;
         }
 
         /// <summary>

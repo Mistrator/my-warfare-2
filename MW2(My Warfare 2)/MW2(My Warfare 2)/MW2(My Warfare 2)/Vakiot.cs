@@ -109,4 +109,20 @@ public abstract class Vakiot
     public const int SATUNNAISRUUTUKENTAN_LOPETUSINDEKSI = 9 + 1; // 3 + 1
 
     #endregion
+
+    #region HUD
+
+    public const string HUD_SAIT_ASEEN = "Sait aseen: ";
+    public const string HUD_SAIT_AMMUKSIA_ASEESEEN = "Sait ammuksia aseeseen: ";
+    public const string HUD_SAIT_KRANAATIN = "Sait kranaatin, kranaattien määrä: ";
+    public const string HUD_KRANAATTEJA_JALJELLA = "Kranaatteja jäljellä: ";
+
+    public const double TAHTAIMEN_MAX_ETAISYYS = 400.0;
+    public const double TAHTAIMEN_MIN_ETAISYYS = 50.0;
+    public const double KRANAATTI_INDIKATTORIN_MIN_KOKO = 1.0;
+    public const double KRANAATTI_INDIKATTORIN_MAX_KOKO = 50.0;
+    public const double KRANAATTI_INDIKAATTORIN_VALKKYMISNOPEUS = 4.0;
+
+
+    #endregion
 }

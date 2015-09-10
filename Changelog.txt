@@ -1,0 +1,5 @@
+-Pelaajalle 2 aimlock (LT), kranaatti siirretty A
+-Buffattu Glock 18 dmg
+-Ase säilyy respatessa, paitsi jos siitä on ammukset loppu -> Glock
+-Asenäyttö ja ammusnäyttö siirretty pelaajan päälle
+-Korjaa bugin jossa alueelta poistumisilmoitus dm rgmapin jälkeen

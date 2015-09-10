@@ -1,0 +1,14 @@
+﻿-tieto uusista aseista DONE
+-"pelaaja sai aseen" pelaajan päälle DONE
+-tappolaskuri pelaajien päälle DONE
+-tähtäys:
+	-pallo kiinteällä etäisyydellä pelaajasta, etäisyys aseen kantaman mukaan DONE osittain, p1 
+	-p2 tähtäys vähemmän herkkä
+-automaattireload DONE
+-aseen vaihto p2 ristiohjaimeen
+
+-valojuovat kirkkaammiksi DONE
+-kranaatit näkyviksi esim välkkyminen DONE
+
+-pelaajille infiniten multiplayerissa max etäisyys toisistaan
+	-esim ajastin ja damagea jos liian kaukana

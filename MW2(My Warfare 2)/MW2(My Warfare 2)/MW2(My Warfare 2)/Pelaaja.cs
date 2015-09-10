@@ -74,6 +74,8 @@ public class Pelaaja : Elava
     /// Näyttö, joka kertoo, että pelaaja on esim. poistunut kentältä.
     /// </summary>
     public Label infoRuutu;
+    private Queue<string> infoViestit;
+    private double viestienValinenAika;
 
     /// <summary>
     /// Näyttö, joka näyttää, mikä ase on valittuna.
@@ -84,11 +86,6 @@ public class Pelaaja : Elava
     /// Näyttö, joka näyttää valitun aseen jäljellä olevien ammusten määrän.
     /// </summary>
     public Label ammusMaaraNaytto;
-
-    /// <summary>
-    /// Näyttö, joka näyttää pelaajan tappojen määrän.
-    /// </summary>
-    public Label TappojenMaaraNaytto { get; set; }
 
     public Timer AsenaytonPiilotusAjastin;
 
@@ -225,7 +222,11 @@ public class Pelaaja : Elava
         infoRuutu.BorderColor = Color.Transparent;
         infoRuutu.TextColor = Color.White;
         infoRuutu.Tag = "HUD";
+        infoRuutu.TextScale = new Vector(0.85, 0.85);
         Game.Add(infoRuutu, 1);
+
+        infoViestit = new Queue<string>();
+        viestienValinenAika = 0.25;
 
         ammusMaaraNaytto = new Label();
         ammusMaaraNaytto.TextColor = Vakiot.HUD_COLOR;
@@ -260,7 +261,6 @@ public class Pelaaja : Elava
 
         Kuolemat = new IntMeter(0);
         Tapot = new IntMeter(0, 0, MW2_My_Warfare_2_.MonestakoVoittaa);
-        Tapot.Changed += delegate { this.TappojenMaaraNaytto.Text = "Tappoja: " + this.Tapot.Value; };
         Tapot.UpperLimit += delegate { Voitti(this); };
         this.kaytetaankoLasertahtainta = kaytetaankoLaseria;
 
@@ -502,6 +502,26 @@ public class Pelaaja : Elava
         this.kentaltaPoistumisAjastin.Stop();
         this.kentaltaPoistumisAjastin.Reset();
         this.aikaPoissaKentalta.Value = 5.00;
+    }
+
+    public void NaytaViesti(string viesti, double aika, bool forceMessage = false)
+    {
+        if (!this.IsAddedToGame || !this.IsVisible) return;
+
+        if (this.infoRuutu.Text != String.Empty && forceMessage == false)
+            infoViestit.Enqueue(viesti);
+        else
+        {
+            this.infoRuutu.Text = viesti;
+
+            Timer.SingleShot(aika, delegate
+            {
+                this.infoRuutu.Text = String.Empty;
+
+                if (infoViestit.Count != 0)
+                    Timer.SingleShot(viestienValinenAika, delegate { NaytaViesti(infoViestit.Dequeue(), aika, false); });
+            });
+        }
     }
 
     public override void Update(Time time)
